@@ -1,0 +1,265 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[american]{babel}
+\usepackage{hyphenat}
+\usepackage[activate={true,nocompatibility}, final, tracking=true, kerning=true, factor=1100, stretch=10, shrink=10]{microtype}
+% Prevent hyphenization
+\tolerance=1
+\emergencystretch=\maxdimen
+\hyphenpenalty=10000
+\hbadness=10000
+
+% Math
+\newcommand\hmmax{0}
+\newcommand\bmmax{0}
+\usepackage{bm}
+\usepackage{amsmath, amsfonts, amssymb, mathrsfs,extarrows}
+\usepackage{commath}
+\usepackage[retainorgcmds]{IEEEtrantools}
+\usepackage{siunitx}
+\usepackage{multirow}
+\usepackage[widespace]{fourier}
+
+% Tables
+\usepackage{array}
+\usepackage{caption}
+\usepackage[figuresright]{rotating}
+\usepackage{multirow}
+\usepackage{makecell}
+\usepackage{footnote}
+\makesavenoteenv{tabular}
+
+% Algorithm
+\usepackage[section]{algorithm}
+\usepackage{algpseudocode}
+
+\usepackage[hmarginratio=1:1,textwidth=360pt,textheight=595.8pt]{geometry}
+% Packages
+\usepackage{import}
+
+% Control structures
+\usepackage{ifthen}
+
+% Listing
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{float}
+
+% Review notes:
+\usepackage{xargs}
+\usepackage[textwidth=30mm,textsize=footnotesize]{todonotes} % to create comments (useful to your advisor!)
+\newcommandx{\bpf}[2][1=]{\todo[linecolor=blue,backgroundcolor=blue!25,bordercolor=blue,#1]{#2}} % Bernardo notes
+
+% Equation color background
+\usepackage{mdframed}
+
+\newmdenv[
+    hidealllines=true,
+    backgroundcolor=black!20,
+    skipbelow=\baselineskip,
+    skipabove=\baselineskip
+]{highlight}
+
+\newcounter{problem}[section]\setcounter{problem}{1}
+\renewcommand{\theproblem}{\arabic{section}.\arabic{problem}}
+\newenvironment{problem}[2][]{%
+    \refstepcounter{problem}
+
+    \mdfsetup{hidealllines=true,
+    backgroundcolor=black!20,
+    skipbelow=\baselineskip,
+    skipabove=\baselineskip,
+    frametitle={Problem~\theproblem~|~#1}}
+
+\begin{mdframed}[]\relax}{%
+\end{mdframed}}
+
+% Enumeration
+\usepackage{enumerate}
+
+
+% Images
+\usepackage[labelformat=simple]{subcaption}
+\renewcommand\thesubfigure{(\alph{subfigure})}
+\renewcommand\thesubtable{(\alph{subtable})}
+\usepackage{graphicx}
+\graphicspath{ {figures/} }
+\usepackage{array}
+\usepackage[section]{placeins}
+\usepackage{color}
+% \usepackage{subcaption}
+% \usepackage{subfig}
+
+
+
+% Images SVG
+\usepackage{import}
+\usepackage{xifthen}
+\usepackage{pdfpages}
+\usepackage{transparent}
+
+\newcommand{\incfig}[1]{
+    \def\svgwidth{0.3\columnwidth}
+    \import{images/studies/minkowski/fundamental_forms_2D/}{#1.pdf_tex}}
+
+
+% Floating environment for listings
+\floatstyle{plain}
+\newfloat{lstfloat}{htbp}{lop}[section]
+\floatname{lstfloat}{Listing}
+\def\lstfloatautorefname{Listing} % needed for hyperref/auroref
+
+% Listing style
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{blue},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\fontsize{7}{10}\selectfont,
+    breakatwhitespace=false,
+    breaklines=false,
+    captionpos=b,
+    keepspaces=true,
+    numbers=left,
+    numbersep=5pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2
+}
+
+\lstset{style=mystyle}
+
+\makeatletter
+\newcommand*{\shifttext}[2]{%
+  \settowidth{\@tempdima}{#2}%
+  \makebox[\@tempdima]{\hspace*{#1}#2}%
+}
+\makeatother
+
+\usepackage{pythonhighlight}
+
+%Custom FramedBox Environment
+%%Loading 'float' package
+\usepackage{float}
+%%Customize 'boxed' float style (caption above the body)
+\makeatletter
+\newcommand\fs@boxedtop
+ {\fs@boxed
+  \def\@fs@mid{\vspace\abovecaptionskip\relax}%
+  \let\@fs@iftopcapt\iftrue
+ }
+\makeatother
+%%Defining float commands
+\floatstyle{boxedtop}
+\floatname{framedbox}{Box}
+\newfloat{framedbox}{hbt}{lob}[section]
+
+% Symbols
+%% Differential Upright "d"
+\newcommand{\ud}{\,\mathrm{d}}
+%% Assemble operator
+\DeclareMathOperator*{\assemble}{\text{\Large $ \mathsf{A} $}}
+%% Matrices and vectors
+\newcommand{\vect}[1]{\bm{#1}}
+\newcommand{\mat}[1]{\bm{#1}}
+\newcommand{\boldsf}[1]{\boldsymbol{\mathsf{#1}}}
+
+\DeclareMathAlphabet{\pazocal}{OMS}{zplm}{m}{n}
+
+\title{Numerical Methods}
+\author{José Luís Passos Vila-Chã}
+\date{May 2021}
+
+
+\begin{document}
+
+\section{Intro}
+
+What is the goal?
+Intuitive understanding of the Fourier/Lagrange transforms.
+
+What is the Fourier/Lagrange tranform used for?
+It transforms differential equations into algebraic equations.
+\textcolor{red}{Give example}
+
+Two main questions arise
+\begin{itemize}
+  \item Why is this the case?
+  \item How can we interpret this?
+\end{itemize}
+
+\section{Vector explanation}
+
+We are going to use an analogy between ordinary vector and functions.
+Here it is used in a heuristic way, but it can be made rigorous.
+
+We take the simplest equation
+\[\bm D \bm x = \bm b.\]
+
+In this case since we are thinking about \(\bm x\) and \(\bm b\) as ordinary vector the operator \(\bm D\) can be a linear transformation,
+represent by some matrix.
+
+The effect of some matrix is this, with this basis vectors and this with these basis vector.
+
+In order to solve our problem in the simplest way possible what would be the ideal case scenario? How could be choose the basis of we are using to render the problem as simple as possible?
+
+Ideally applying the operator \(\bm D\) on a vector \(\bm x\) would be multiplying it a constant.
+Thus,
+\[\bm D \bm x = \lambda \bm x.\]
+
+For most matrices this problem will render a set of eigen vectors and eigen values, wich can be interpreted as direction wich only suffer extension or compresssion.
+
+To change to this new simpler basicstyle
+we do
+\[\bm x|_S' = \sum_i \langle \bm x, \bm v_i\rangle \bm v_i.\]
+This, is the same as multiplying \(\bm x\) a matrix \(\bm L\)
+
+So now we have
+\[\bm L \bm D \bm L^{-1} \bm L \bm x = \bm \bm b,\]
+or
+\[\bm D' \bm x' = \bm b',\]
+
+In this new coordinate system, for most linear trasnformations, matrix \(\bm D'\) will diagonal.
+
+\section{Moving on to functions}
+
+Intuition for functions as vectors.
+
+Same prombem but now \(\bm D\).
+\[D f = g,\]
+
+The simplest effect the operator could have is to multiply by a number.
+\[-iD f = \lambda f.\]
+
+So
+\[f(x) = \frac{e^{-i\lambda}}{\sqrt{\pi}}.\]
+
+\[f(x) = \sum_i \langle f, \varphi_i\rangle \varphi_i,\]
+
+
+Substituting we get
+
+
+Now if the function is not periodic 
+
+\[f^*(x) = \int_{-\infty}^{\infty} f(y) e^{-ixy} dy\]
+
+
+\[\mathcal L (D f) = s\mathcal L(f) - f(0).\]
+
+
+
+
+
+
+
+
+
+\end{document}
