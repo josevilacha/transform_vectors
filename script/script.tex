@@ -1,0 +1,305 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[american]{babel}
+\usepackage{hyphenat}
+\usepackage[activate={true,nocompatibility}, final, tracking=true, kerning=true, factor=1100, stretch=10, shrink=10]{microtype}
+% Prevent hyphenization
+\tolerance=1
+\emergencystretch=\maxdimen
+\hyphenpenalty=10000
+\hbadness=10000
+
+% Math
+\newcommand\hmmax{0}
+\newcommand\bmmax{0}
+\usepackage{bm}
+\usepackage{amsmath, amsfonts, amssymb, mathrsfs,extarrows}
+\usepackage{commath}
+\usepackage[retainorgcmds]{IEEEtrantools}
+\usepackage{siunitx}
+\usepackage{multirow}
+\usepackage[widespace]{fourier}
+
+% Tables
+\usepackage{array}
+\usepackage{caption}
+\usepackage[figuresright]{rotating}
+\usepackage{multirow}
+\usepackage{makecell}
+\usepackage{footnote}
+\makesavenoteenv{tabular}
+
+% Algorithm
+\usepackage[section]{algorithm}
+\usepackage{algpseudocode}
+
+\usepackage[hmarginratio=1:1,textwidth=360pt,textheight=595.8pt]{geometry}
+% Packages
+\usepackage{import}
+
+% Control structures
+\usepackage{ifthen}
+
+% Listing
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{float}
+
+% Review notes:
+\usepackage{xargs}
+\usepackage[textwidth=30mm,textsize=footnotesize]{todonotes} % to create comments (useful to your advisor!)
+\newcommandx{\bpf}[2][1=]{\todo[linecolor=blue,backgroundcolor=blue!25,bordercolor=blue,#1]{#2}} % Bernardo notes
+
+% Equation color background
+\usepackage{mdframed}
+
+\newmdenv[
+    hidealllines=true,
+    backgroundcolor=black!20,
+    skipbelow=\baselineskip,
+    skipabove=\baselineskip
+]{highlight}
+
+\newcounter{problem}[section]\setcounter{problem}{1}
+\renewcommand{\theproblem}{\arabic{section}.\arabic{problem}}
+\newenvironment{problem}[2][]{%
+    \refstepcounter{problem}
+
+    \mdfsetup{hidealllines=true,
+    backgroundcolor=black!20,
+    skipbelow=\baselineskip,
+    skipabove=\baselineskip,
+    frametitle={Problem~\theproblem~|~#1}}
+
+\begin{mdframed}[]\relax}{%
+\end{mdframed}}
+
+% Enumeration
+\usepackage{enumerate}
+
+
+% Images
+\usepackage[labelformat=simple]{subcaption}
+\renewcommand\thesubfigure{(\alph{subfigure})}
+\renewcommand\thesubtable{(\alph{subtable})}
+\usepackage{graphicx}
+\graphicspath{ {figures/} }
+\usepackage{array}
+\usepackage[section]{placeins}
+\usepackage{color}
+% \usepackage{subcaption}
+% \usepackage{subfig}
+
+
+
+% Images SVG
+\usepackage{import}
+\usepackage{xifthen}
+\usepackage{pdfpages}
+\usepackage{transparent}
+
+\newcommand{\incfig}[1]{
+    \def\svgwidth{0.3\columnwidth}
+    \import{images/studies/minkowski/fundamental_forms_2D/}{#1.pdf_tex}}
+
+
+% Floating environment for listings
+\floatstyle{plain}
+\newfloat{lstfloat}{htbp}{lop}[section]
+\floatname{lstfloat}{Listing}
+\def\lstfloatautorefname{Listing} % needed for hyperref/auroref
+
+% Listing style
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{blue},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\fontsize{7}{10}\selectfont,
+    breakatwhitespace=false,
+    breaklines=false,
+    captionpos=b,
+    keepspaces=true,
+    numbers=left,
+    numbersep=5pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2
+}
+
+\lstset{style=mystyle}
+
+\makeatletter
+\newcommand*{\shifttext}[2]{%
+  \settowidth{\@tempdima}{#2}%
+  \makebox[\@tempdima]{\hspace*{#1}#2}%
+}
+\makeatother
+
+\usepackage{pythonhighlight}
+
+%Custom FramedBox Environment
+%%Loading 'float' package
+\usepackage{float}
+%%Customize 'boxed' float style (caption above the body)
+\makeatletter
+\newcommand\fs@boxedtop
+ {\fs@boxed
+  \def\@fs@mid{\vspace\abovecaptionskip\relax}%
+  \let\@fs@iftopcapt\iftrue
+ }
+\makeatother
+%%Defining float commands
+\floatstyle{boxedtop}
+\floatname{framedbox}{Box}
+\newfloat{framedbox}{hbt}{lob}[section]
+
+% Symbols
+%% Differential Upright "d"
+\newcommand{\ud}{\,\mathrm{d}}
+%% Assemble operator
+\DeclareMathOperator*{\assemble}{\text{\Large $ \mathsf{A} $}}
+%% Matrices and vectors
+\newcommand{\vect}[1]{\bm{#1}}
+\newcommand{\mat}[1]{\bm{#1}}
+\newcommand{\boldsf}[1]{\boldsymbol{\mathsf{#1}}}
+
+\DeclareMathAlphabet{\pazocal}{OMS}{zplm}{m}{n}
+
+\title{Numerical Methods}
+\author{José Luís Passos Vila-Chã}
+\date{May 2021}
+
+
+\begin{document}
+
+\section{Intro}
+
+Hi, in this video we are going to try to improve our understanding of the Fourier transform.
+The transform is defined like so.
+
+This will be mainly focused on two questions.
+
+First, why does the Fourier transform transform differential equations into algebraic equations?
+Here $D$ is differential operator and $f$ some unknown function depending on $t$.
+Applying the Fourier transform we get an algebraic equation, where there is a new unknown function, the Fourier transform of $f$,
+$\mathcal F(f)$ function of $w$.
+But no differentiation operators are in sight!
+We can now solve this algebraic equation, and use the inverse Fourier transform to find our initial unkwon function $f$.
+
+Second, and closely connected to the first, where does the kernel of the transformation, i.e, $e^{-iwt}$, come from?
+How can we interpret it?
+
+\section{Vector/function analogy}
+
+To faciliate our insight we will use the fact that in some ways, and this can be rigously defined,  functions and vectors are very similar.
+
+We can think about a vector, with four components, for example, as a function of sorts.
+Its domain is only four numbers and the value of the function is equal to corresponding component of the vector.
+
+The internal product between two vectors can be computed like so.
+We multiply the corresponding components by each other and sum them all.
+
+To extend this idea we could consider an increasing number of components.
+Even an infinite amount of them, one for each integer, for example.
+Taking the next logical step we can consider instead of countable number of components, an uncountable number of compoents.
+That is to each real number we associate another real number.
+But this is precisely the definition of a real function.
+
+Now that we have an uncountable number of components, the previous sum over all the components of the vector used to obtain the interior product must transform into an integral over the domain of the functions.
+
+We can even associate to each component not a real number but a complex one.
+To do this the formula for the internal products must be upgrade like this, where the over bar represents the complex conjugate.
+
+
+\section{Vector explanation}
+
+So now we are going to put this analogy to use.
+Remember we are trying to understand Fourier transform in relation to differential equations.
+Lets consider the simplest case.
+
+Since we are going to start with ordinary vectors, imagine that the operator \(D\) is not the differentiation operator but some symmetric linear trasnformation.
+We can think about as a matrix.
+It is still an operator, so the conclusions we will reach regarding operators in general will still be valid when we look at the differentiation operator.
+We also switch to more suggestive symbols for this context.
+
+Looking a this equation we can think to ourselves in an ideal world what would be the smallest effect $D$ could have on a vector.
+Perhaps one of the simplest effects it could have is to simply multiply a vector by a constant.
+Obviously, this can be true for every vector, so we ask for this operator $D$ in particular what are the vectors that don't change direction.
+This is the well known eigen problem, and the pairs of vectors and constants found are known as the eigen-vectors and eigen-values of the operator.
+Because we decided that $D$ is symmetric the eigen-vectors will be orthogonal and the eigen-values will be real values.
+
+Now, we can express any vector using the eigen-vectors as a basis.
+This can be done projecting the vector using the inner product in each direction-
+Summing the contributions in each direction we get our vector back.
+And why is this relevant?
+
+Lets see what hapens when use this on the equation.
+Using the fact that $D$ is symmetric, we now have $D v_i$ and we know this the same as multiplying $v_i$ by its corresponding eigen value.
+And just like that we don't have in our problem any $D$s, the problem has become a system of equations.
+So we can find the components of the unknown vector $\bm x$.
+
+\section{Moving on to functions}
+
+So moving on to functions, we are going to take a look at the Fourier series before looking at the Fourier transform.
+
+We are still considering this simple differential equation.
+We asume now that $f$ and $g$ are periodic functions with period $L$.
+
+$D$ is the differential operator and it is an anti-Hermitian operator.
+The dagger is the symbol the Hermitian conjugate, obtained by transposing and taking the complex conjugate of the operator.
+Multiplying $D$ by $-i$ we get a Hermitian operator, which we can think about as being the extension of a symmetric operator when going from the real numbers to the complex numbers.
+
+Again looking a this equation we think to ourselves what would be the smallest effect $D$ could have on a function.
+Of course, it could just multiply it by a number.
+Writing this in mathematical notation, we have again an eigenvalue problem, and the pairs of functions and constants found are known as the eigen-functions and eigen-values.
+We use $-iD$ because of its Hermicity, so that the eigenfunctions are orthogonal to each other.
+The eigenfunctions of the operator $-iD$ are $e^{i\lambda t}/\sqrt{2\pi}$.
+We can choose from these functions for our basis, whose period is an integer multiple of $L$.
+These form an orthonormal basis for the periodic functions of period $L$.
+
+Now, we can express any such function using this basis.
+This is precisely the Fourier series of the function.
+
+Lets see what hapens when use this representation on the equation.
+We assume that all relevant functions have converging Fourier series.
+Using the fact that $D$ is anti-Hermitian, we now have $D e^{i\lambda t}$ and we know this the same as multiplying $e^{i\lambda t}$ by $i\lambda$.
+And just like that, there are no $D$ in sight, the problem has become a system of equations.
+An infinite number of them.
+So we can find the number of coefficients we wish and approximate the unknown function through the trucnateed Fourier series.
+
+\section{Fourier transform}
+
+Finally, we are going to look at the Fourier transform.
+
+We are still considering this simple differential equation.
+$D$ is still the differential operator, with the same properties.
+We consider the eigenproblem again and for the same reasons.
+
+Now for our basis we consider all the eigen-functions where $\lambda$ is real.
+Now, we can express any appropriate function using this basis.
+
+This is the so-called Fourier integral, where the interior product inside the integral is the Fourier transform.
+
+Substituting above and using the same argument as before we can transform the differential equation into an algebraic equation.
+Having found the Fourier transform we can get back the unknown function through the Fourier integral.
+
+\section{Outro}
+
+Answering our initial questions, we have seen that the Fourier transform transforms differential equaionts into algebraic equations because it represents the function using a basis of functions where the operator of differentiation is no more than multiplying the function by a number.
+This basis of functions is the $e^{iwt}$ this is why its complex conjugate is the kernel of the Fourier trasnform.
+
+
+
+
+
+
+
+\end{document}

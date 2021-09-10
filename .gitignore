@@ -1,0 +1,9 @@
+*.pyc
+*.aux
+*.dvi
+*.log
+/media
+*.fdb_latexmk
+*.fls
+*.synctex(busy)
+*.synctex.gz
