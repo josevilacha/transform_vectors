@@ -1297,25 +1297,31 @@ class FourierSeriesExplainer(ThreeDScene):
     def construct(self):
 
         self.setup_this_scene()
+        delta_z = 2.5
+        n_points = 500
 
-        axes_func = Axes(
+        axes_func = ThreeDAxes(
             x_range=[-2, 2, 0.5],
             y_range=[-2, 2, 0.5],
-            # z_range=[-4, 4, 1],
+            z_range=[-2.5 * 4, 2.5 * 4, 1],
+            # z_range=[-1e-4, 1e-4, 1],
             x_length=8,
             y_length=5,
-            # z_length=6,
+            z_length=2.5 * 6,
             axis_config={"include_ticks": False},
             tips=False,
         )
         axes_coeffs = ThreeDAxes(
             x_range=[-0.5, 0.5, 0.1],
             y_range=[-0.5, 0.5, 0.1],
-            z_range=[-2.5 * 4, 2.5 * 4, 1],
+            z_range=[-2.5 * 4, 2.5 * 4, 2.5],
             x_length=4,
             y_length=4,
             z_length=2.5 * 6,
-            z_axis_config={"include_ticks": False},
+            # z_axis_config={
+            #     "numbers_to_include": list(range(-3, 4)),
+            #     "label_direction": RIGHT,
+            # },
             # x_axis_config={
             #     "numbers_to_include": [0.5],
             #     "label_direction": np.array([0.45]),
@@ -1327,18 +1333,16 @@ class FourierSeriesExplainer(ThreeDScene):
             tips=False,
         )
 
-        graph = axes_func.get_graph(
-            self.func_to_model, x_range=[-1.5, 1.5, 1e-3], color=RED
-        )
-        # labels_axes_coeffs[0].apply_matrix(
-        #     rot_mat_inv, about_point=labels_axes_coeffs[0].get_center()
-        # )
-        # labels_axes_coeffs[1].apply_matrix(
-        #     rot_mat_inv, about_point=labels_axes_coeffs[1].get_center()
-        # )
-        # z_label_axes_coeffs.apply_matrix(
-        #     rot_mat_inv, about_point=z_label_axes_coeffs.get_center()
-        # )
+        graph_x_values = np.linspace(-1.5, 1.5, 100)
+        graph_y_values = [self.func_to_model(x) for x in graph_x_values]
+        graph_z_values = [0 for _ in graph_x_values]
+
+        graph = axes_func.get_line_graph(
+            x_values=graph_x_values,
+            y_values=graph_y_values,
+            z_values=graph_z_values,
+            add_vertex_dots=False,
+        ).set_stroke(color=RED)
 
         # rects = axes_func.get_riemann_rectangles(
         #     graph=graph, x_range=[-2, 2], dx=0.1, stroke_color=WHITE
@@ -1355,23 +1359,6 @@ class FourierSeriesExplainer(ThreeDScene):
         both_graphs.arrange(RIGHT)
         both_graphs.center()
 
-        # def redraw_x_axis():
-        #     x_label = axes_coeffs.get_x_axis_label(r"\mathrm{Re}")
-        #     x_label.move_to(axes_coeffs.coords_to_point(0.5, 0.1, 0))
-        #     x_label.apply_matrix(
-        #         self.camera.get_rotation_matrix().T, about_point=x_label.get_center()
-        #     )
-        #
-        #     return x_label
-        #
-        # x_label_axes_coeffs = always_redraw(redraw_x_axis)
-        # # y_label_axes_coeffs = axes_coeffs.get_y_axis_labels(y_label=r"\mathrm{Im}")
-        # z_label_axes_coeffs = MathTex("\omega")
-        #
-        # # labels_axes_coeffs[1].move_to(axes_coeffs.coords_to_point(0.15, 0.5, 0))
-        # z_label_axes_coeffs.move_to(axes_coeffs.coords_to_point(0.15, 0.05, 3.5))
-        # all_coeff.add(x_label_axes_coeffs)
-
         x_label = axes_coeffs.get_x_axis_label(r"\mathrm{Re}")
         x_label.move_to(axes_coeffs.coords_to_point(0.5, 0.15, 0))
 
@@ -1379,7 +1366,20 @@ class FourierSeriesExplainer(ThreeDScene):
         y_label.move_to(axes_coeffs.coords_to_point(0.15, 0.5, 0))
 
         z_label = MathTex("\omega")
-        z_label.move_to(axes_coeffs.coords_to_point(0.15, 0.05, 3.5))
+        z_label.move_to(axes_coeffs.coords_to_point(0.15, 0.05, 5.5))
+        z_label_graph = MathTex("\omega")
+        z_label_graph.move_to(axes_func.coords_to_point(0.15, -0.05, 9))
+
+        z_tick_labels_base = []
+        for ind in range(-3, 4):
+            if ind == 0:
+                continue
+
+            z_tick_labels_base.append(MathTex("{0:d}".format(ind), font_size=8.0))
+            z_tick_labels_base[-1].move_to(
+                axes_coeffs.coords_to_point(-0.05, 0.05, delta_z * ind)
+            )
+            z_tick_labels_base[-1].scale(0.6)
 
         def redraw_facing_camera(object):
             def redraw_func():
@@ -1395,11 +1395,30 @@ class FourierSeriesExplainer(ThreeDScene):
         x_label_axes_coeffs = always_redraw(redraw_facing_camera(x_label))
         y_label_axes_coeffs = always_redraw(redraw_facing_camera(y_label))
         z_label_axes_coeffs = always_redraw(redraw_facing_camera(z_label))
+        z_label_axes_func = always_redraw(redraw_facing_camera(z_label_graph))
+        z_tick_labels_all = [
+            always_redraw(redraw_facing_camera(tick)) for tick in z_tick_labels_base
+        ]
 
         all_coeff.add(x_label_axes_coeffs, y_label_axes_coeffs)
-        self.add(all_func, all_coeff)
-        delta_z = 2.5
-        n_points = 500
+        # self.add(all_func, all_coeff)
+
+        self.play(
+            LaggedStart(
+                *[
+                    Create(obj)
+                    for obj in [
+                        axes_func,
+                        graph,
+                        axes_coeffs,
+                        x_label_axes_coeffs,
+                        y_label_axes_coeffs,
+                    ]
+                ],
+                run_time=4,
+                lag_ratio=0.75,
+            )
+        )
 
         x_reference_lines = []
         t = np.linspace(-2, 5, 10)
@@ -1417,11 +1436,9 @@ class FourierSeriesExplainer(ThreeDScene):
                 )
             )
             if freq > 0:
-                x_reference_lines[-1].set_stroke(color=WHITE, opacity=0.5, width=0.5)
+                x_reference_lines[-1].set_stroke(color=BLUE, opacity=0.5, width=1.5)
             else:
-                x_reference_lines[-1].set_stroke(color=WHITE, opacity=0.8, width=0.3)
-        self.add(*x_reference_lines)
-        # self.wait()
+                x_reference_lines[-1].set_stroke(color=BLUE, opacity=0.8, width=1.5)
 
         # The camera is auto set to PHI = 0 and THETA = -90
         coeff_dots = []
@@ -1454,7 +1471,8 @@ class FourierSeriesExplainer(ThreeDScene):
                                 * np.exp(1j * theta_tracker.get_value())
                             ),
                             z_tracker.get_value(),
-                        )
+                        ),
+                        color=DARK_BLUE,
                     )
 
                 def line_generator():
@@ -1503,21 +1521,17 @@ class FourierSeriesExplainer(ThreeDScene):
             coeff_dots.append(current_dot)
             coeff_lines.append(current_line)
 
-            if freq > 0:
-                coeff_dots[-1].set_stroke(color=WHITE, opacity=0.5, width=0.5)
-            else:
-                coeff_dots[-1].set_stroke(color=WHITE, opacity=0.8, width=0.3)
+            # coeff_dots[-1].set_stroke(color=DARK_BLUE, width=0.3)
+            # coeff_dots[-1].set_stroke(color=DARK_BLUE)
 
         # print([coeff_dot.get_center()[2] for coeff_dot in coeff_dots])
 
-        opacity_trackers = [ValueTracker(0.6) for _ in range(-3, 4)]
+        opacity_trackers = [ValueTracker(1) for _ in range(-3, 4)]
         basis_func = []
         t = np.linspace(-1.5, 1.5, n_points)
         for freq in range(-3, 4):
 
-            def create_func_generator(
-                freq, axes  # , magnitude_trackers, theta_trackers, z_trackers
-            ):
+            def create_func_generator(freq, axes):
                 def func_generator():
                     x_values = t
                     y_values = np.real(
@@ -1535,17 +1549,21 @@ class FourierSeriesExplainer(ThreeDScene):
                         line_color=BLUE,
                         add_vertex_dots=False,
                     )
-                    if freq > 0:
-                        func.set_stroke(
-                            color=DARK_BLUE,
-                            opacity=opacity_trackers[freq + 3].get_value(),
-                            width=0.5,
-                        )
-                    else:
-                        func.set_stroke(
-                            color=DARK_BLUE,
-                            opacity=opacity_trackers[freq + 3].get_value(),
-                        )
+                    func.set_stroke(
+                        color=DARK_BLUE,
+                        opacity=opacity_trackers[freq + 3].get_value(),
+                    )
+                    # if freq > 0:
+                    #     func.set_stroke(
+                    #         color=DARK_BLUE,
+                    #         opacity=opacity_trackers[freq + 3].get_value(),
+                    #         width=0.5,
+                    #     )
+                    # else:
+                    #     func.set_stroke(
+                    #         color=DARK_BLUE,
+                    #         opacity=opacity_trackers[freq + 3].get_value(),
+                    #     )
                     return func
 
                 return func_generator
@@ -1559,53 +1577,38 @@ class FourierSeriesExplainer(ThreeDScene):
                 )
             )
 
-        self.add(*basis_func)
+        self.wait()
+        # self.add(*basis_func)
+        self.play(
+            LaggedStart(
+                *[Create(obj) for obj in basis_func],
+                run_time=4,
+                lag_ratio=0.75,
+            )
+        )
 
-        position_prime = self.rotated_camera_position
-        up = np.array([0, 1, 0])
-        camera_direction = np.array(position_prime)
-        camera_direction = camera_direction / np.linalg.norm(camera_direction)
-        camera_right = np.cross(camera_direction, up)
-        camera_right = camera_right / np.linalg.norm(camera_right)
-        camera_up = np.cross(camera_direction, camera_right)
-        camera_up = camera_up / np.linalg.norm(camera_up)
+        phi_cam, theta_cam, gamma_cam = get_euler_angles_from_rotation_matrix(
+            look_at(ORIGIN, self.rotated_camera_position, np.array([0, 1, 0]))
+        )
 
-        # theta_cam = np.arccos(position_prime[2] / np.linalg.norm(position_prime))
-        # phi_cam = np.arctan(position_prime[1] / position_prime[0])
-        #
-        # view_up = [0.183013, 0.965926, 0.183013]
-        # gamma_cam = np.arccos(
-        #     np.dot(position_prime, view_up)
-        #     / (np.linalg.norm(position_prime) * np.linalg.norm(view_up))
-        # )
-        # sdfa
-        rot_mat = np.array([camera_right, camera_up, camera_direction])
-        rot_mat_inv = -rot_mat.T
-        phi_cam = np.arctan2(rot_mat[2, 0], rot_mat[2, 1])
-        # phi_cam = np.arccos(
-        #     -camera_direction[1] / np.sqrt(1 - camera_direction[2] ** 2)
-        # )
-        theta_cam = np.arccos(rot_mat[2, 2])
-        gamma_cam = -np.arctan2(rot_mat[0, 2], rot_mat[1, 2])
-        # gamma_cam = np.arccos(camera_right[2] / np.sqrt(1 - camera_direction[2] ** 2))
-        print(phi_cam / DEGREES, theta_cam / DEGREES, gamma_cam / DEGREES)
-        # self.set_camera_orientation(
-        # self.wait(2)
+        self.play(Write(z_label_axes_coeffs), Write(z_label_axes_func))
+        self.add(*z_tick_labels_all)
+
         self.move_camera(
-            # phi=20 * DEGREES,
-            #     theta=46 * DEGREES - 90 * DEGREES,
-            #     gamma=-15 * DEGREES,
-            phi=-phi_cam,
-            theta=-theta_cam - 90 * DEGREES,
+            phi=phi_cam,
+            theta=theta_cam,
             gamma=gamma_cam,
         )
-        self.add(z_label_axes_coeffs)
 
         # self.play(
         #     *[
         #         z_tracker.animate.set_value(freq * delta_z)
         #         for freq, z_tracker in zip(range(-3, 4), z_trackers)
         #     ],
+        # )
+        # self.play(*[Create(line) for line in x_reference_lines])
+        self.wait()
+        # self.play(
         #     *[
         #         opacity_tracker.animate.set_value(1)
         #         if freq <= 0
@@ -1613,8 +1616,12 @@ class FourierSeriesExplainer(ThreeDScene):
         #         for freq, opacity_tracker in zip(range(-3, 4), opacity_trackers)
         #     ],
         # )
+        #
+        # print([z_tracker.get_value() for z_tracker in z_trackers])
 
+        # self.play(LaggedStart(*[FadeIn(object) for object in coeff_dots + coeff_lines]))
         self.add(*coeff_dots, *coeff_lines)
+        self.wait()
         np.random.seed(42)
         random_magnitudes = -1 + 2 * np.random.random(7)
         random_thetas = -np.pi + 2 * np.pi * np.random.random(7)
@@ -1657,45 +1664,24 @@ class FourierSeriesExplainer(ThreeDScene):
             color=ORANGE,
         )
         # self.play(
-        #     # *[
-        #     #     ReplacementTransform(basis, graph_fourier_approx)
-        #     #     for basis in basis_func
-        #     # ],
+        #     *[
+        #         ReplacementTransform(basis, graph_fourier_approx)
+        #         for basis in basis_func
+        #     ],
         #     *[
         #         z_tracker.animate.set_value(0)
         #         for freq, z_tracker in zip(range(-3, 4), z_trackers)
         #     ],
         # )
-        self.remove(*basis_func)
-        self.add(graph_fourier_approx)
-        self.move_camera(
-            phi=0,
-            theta=-90 * DEGREES,
-            gamma=0,
-        )
-        #  array([[-7.07106781e-01,  1.52177069e-16,  7.07106781e-01],
-        # [ 4.08248290e-01, -8.16496581e-01,  4.08248290e-01],
-        # [ 5.77350269e-01,  5.77350269e-01,  5.77350269e-01]])
-
+        # self.remove(*basis_func)
+        # self.remove(*coeff_lines)
+        # self.add(graph_fourier_approx)
+        # self.move_camera(
+        #     phi=0,
+        #     theta=-90 * DEGREES,
+        #     gamma=0,
+        # )
         # self.wait(10)
-        # self.move_camera(theta=-70 * DEGREES)
-        # self.wait(1)
-
-        # self.begin_ambient_camera_rotation(
-        #     rate=PI / 10, about="gamma"
-        # )  # Rotates at a rate of radians per second
-        self.wait(10)
-        # self.play(Create(rects), run_time=3)
-        # self.play(Create(graph2))
-        # self.wait()
-        # self.stop_ambient_camera_rotation()
-        #
-        # self.wait()
-        # self.begin_ambient_camera_rotation(
-        #     rate=PI / 10, about="phi"
-        # )  # Rotates at a rate of radians per second
-        # self.wait(2)
-        # self.stop_ambient_camera_rotation()
 
 
 class Intro(Scene):
@@ -1842,3 +1828,33 @@ def fourier_series_coeff_numpy(f, T, N, return_complex=False):
     else:
         y *= 2
         return y[0].real, y[1:-1].real, -y[1:-1].imag
+
+
+def look_at(view_target, camera_position, view_up):
+
+    camera_direction = np.array(camera_position) - np.array(view_target)
+    camera_direction = camera_direction / np.linalg.norm(camera_direction)
+
+    camera_right = np.cross(camera_direction, view_up)
+    camera_right = camera_right / np.linalg.norm(camera_right)
+
+    camera_up = np.cross(camera_direction, camera_right)
+    camera_up = camera_up / np.linalg.norm(camera_up)
+
+    rot_mat = np.array([camera_right, camera_up, camera_direction])
+
+    return rot_mat
+
+
+def get_euler_angles_from_rotation_matrix(rot_mat):
+    """
+    Get Euler rotation angles from rotation matrix.
+
+    Angles according to Z-X-Z convention and manim's `move_camera`.
+    """
+
+    phi_cam = np.arctan2(rot_mat[2, 0], rot_mat[2, 1])
+    theta_cam = np.arccos(rot_mat[2, 2])
+    gamma_cam = -np.arctan2(rot_mat[0, 2], rot_mat[1, 2])
+
+    return -phi_cam, -theta_cam - 90 * DEGREES, gamma_cam
