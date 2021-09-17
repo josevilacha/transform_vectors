@@ -51,7 +51,7 @@ class VectorScene(Scene):
 
         all_text_1st_phase = VGroup()
 
-        diff_eq = MathTex(r"mD^2 f(t) + c {{Df(t)}} + kf(t) {{=}} F(t)", color=BLUE)
+        diff_eq = MathTex(r"m{D}^2 f(t) + c {{Df(t)}} + kf(t) {{=}} F(t)", color=BLUE)
         diff_eq_simple = MathTex(r"{{Df(t)}}{{=}} {{F(t)}}", color=BLUE)
 
         problem_vector = MathTex(r"{{D\bm x}} {{=}} {{\bm b}}", color=BLUE)
@@ -149,6 +149,16 @@ class VectorScene(Scene):
         self.play(Write(title))
         self.wait(2)
         self.play(Write(diff_eq))
+
+        operator_symbol = diff_eq.get_parts_by_tex("{D}")
+        import pdb
+
+        pdb.set_trace()
+        operator_label = Tex(r"Linear\\Operator").next_to(operator_symbol, buff=0.3)
+        operator_arrow = Arrow(operator_symbol, operator_label, buff=0.1)
+
+        self.play(GrowArrow(operator_arrow))
+
         self.wait(2)
         self.play(ReplacementTransform(diff_eq, diff_eq_simple))
         self.wait(2)
@@ -1688,7 +1698,7 @@ class Intro(Scene):
     def construct(self):
         text_1 = Tex(r"Goal: A more intuitive understanding of the Fourier tranform:")
         fourier_transform = MathTex(
-            r"{{[\mathcal F(f)](w)}}=\int_{-\infty}^{+\infty} f(t) e^{-iwt}\mathrm d t",
+            r"{{[\mathcal F(f)](\omega)}}=\frac{1}{\sqrt{2\pi} }\int_{-\infty}^{+\infty} f(t) e^{-i\omega t}\mathrm d t",
             color=BLUE,
         )
         text_2 = Tex(
@@ -1700,17 +1710,17 @@ class Intro(Scene):
             color=BLUE,
         )
         alg_eq = MathTex(
-            r"-mw^2{{[\mathcal F(f)](w)}}+icw{{[\mathcal F(f)](w)}} + k{{[\mathcal F(f)](w)}}={{[\mathcal F(F)](w)}}",
+            r"-m\omega^2{{[\mathcal F(f)](\omega)}}+ic\omega{{[\mathcal F(f)](\omega)}} + k{{[\mathcal F(f)](\omega)}}={{[\mathcal F(F)](\omega)}}",
             color=BLUE,
         )
         sol = MathTex(
-            r"{{f(t)}} =\frac{1}{2\pi}\int_{-\infty}^{+\infty}{{[\mathcal F(f)](w)}}e^{iwt}\mathrm d w",
+            r"{{f(t)}} =\frac{1}{\sqrt{2\pi} }\int_{-\infty}^{+\infty}{{[\mathcal F(f)](\omega)}}e^{i\omega t}\mathrm d \omega",
             color=BLUE,
         )
         text_3 = Tex(
-            r"Why the use of {{$e^{-iwt}$}} as the kernel of the tranformation? How can this be interpreted?"
+            r"Why the use of {{$e^{-i\omega t}$}} as the kernel of the tranformation? How can this be interpreted?"
         )
-        text_3.get_part_by_tex(r"$e^{-iwt}$").set_color(BLUE)
+        text_3.get_part_by_tex(r"$e^{-i\omega t}$").set_color(BLUE)
         full_group = VGroup(*[text_1, fourier_transform, text_2, diff_eq, text_3])
 
         full_group.arrange(DOWN, buff=std_line_buff)
@@ -1719,12 +1729,23 @@ class Intro(Scene):
         diff_eq_2.move_to(diff_eq.get_center())
         sol.move_to(diff_eq_2.get_center())
 
+        self.wait(5)
+        # Hi, in this video, we will try to improve our understanding of the Fourier
+        # transform.
         self.play(Write(text_1), Write(fourier_transform), run_time=2)
-        self.wait(1)
+
+        self.wait(3)
+        # The transform is defined like so.
         self.play(Indicate(fourier_transform, color=ORANGE))
-        self.wait(1)
+
+        self.wait(3)
+        # This will be mainly focused on two questions.
+        # First, why does the Fourier transform turn differential equations into algebraic equations?
         self.play(Write(text_2), Write(diff_eq), run_time=2)
+        self.wait(8)
+
         self.wait(1)
+
         self.play(
             ReplacementTransform(diff_eq, diff_eq_2),
             run_time=2,
@@ -1733,7 +1754,7 @@ class Intro(Scene):
         self.play(ReplacementTransform(diff_eq_2, alg_eq), run_time=2)
         self.wait(1)
         self.play(
-            Indicate(alg_eq.get_parts_by_tex(r"[\mathcal F(f)](w)"), color=ORANGE)
+            Indicate(alg_eq.get_parts_by_tex(r"[\mathcal F(f)](\omega)"), color=ORANGE)
         )
         self.wait(1)
         self.play(ReplacementTransform(alg_eq, sol), run_time=2)
@@ -1775,6 +1796,485 @@ class Outro(Scene):
         self.wait(2)
 
         # text_5 = Tex(r"We are going the analogy between ordinary vectors and functions as a starting point.")
+
+
+class FourierTransformExplainer(ThreeDScene):
+    def setup_this_scene(self):
+
+        self.rotated_camera_position = [2, 1.5, 1]
+        self.rotated_camera_direction = self.rotated_camera_position / np.linalg.norm(
+            self.rotated_camera_position
+        )
+        self.amplitude = 1.5
+
+    def func_to_model(self, x, period=1):
+
+        val = np.exp(-self.amplitude * x) if x > 0 else 0
+
+        return val
+
+    def fourier_transform(self, w):
+
+        val = 1 / (self.amplitude + 2 * np.pi * 1j * w)
+
+        return val
+
+    def other_transform(self, w):
+
+        val = 2 * self.amplitude / (self.amplitude ** 2 + 4 * np.pi ** 2 * w ** 2)
+
+        return val
+
+    def interpolate_func_coeff(self, w, t):
+
+        val_1 = self.fourier_transform(w)
+        val_2 = self.other_transform(w)
+
+        return (1 - t) * val_1 + t * val_2
+
+    def construct(self):
+
+        self.setup_this_scene()
+        delta_z = 1
+        n_points = 500
+
+        axes_func = ThreeDAxes(
+            x_range=[-2, 2, 0.5],
+            y_range=[-2, 2, 0.5],
+            z_range=[-4, 4, 1],
+            # z_range=[-1e-4, 1e-4, 1],
+            x_length=8,
+            y_length=5,
+            z_length=2.5 * 6,
+            axis_config={"include_ticks": False},
+            tips=False,
+        )
+        axes_coeffs = ThreeDAxes(
+            x_range=[-2, 2, 0.5],
+            y_range=[-2, 2, 0.5],
+            z_range=[-4, 4, 1],
+            x_length=4,
+            y_length=4,
+            z_length=2.5 * 6,
+            # z_axis_config={
+            #     "numbers_to_include": list(range(-3, 4)),
+            #     "label_direction": RIGHT,
+            # },
+            # x_axis_config={
+            #     "numbers_to_include": [0.5],
+            #     "label_direction": np.array([0.45]),
+            # },
+            # y_axis_config={
+            #     "numbers_to_include": [0.5],
+            #     "label_direction": np.array([0.45]),
+            # },
+            tips=False,
+        )
+
+        graph_x_values = np.linspace(-1.5, 1.5, 100)
+        graph_y_values = [self.func_to_model(x) for x in graph_x_values]
+        graph_z_values = [0 for _ in graph_x_values]
+
+        graph = axes_func.get_line_graph(
+            x_values=graph_x_values,
+            y_values=graph_y_values,
+            z_values=graph_z_values,
+            add_vertex_dots=False,
+        ).set_stroke(color=RED)
+
+        all_func = VGroup(axes_func, graph)
+        all_coeff = VGroup(axes_coeffs)
+        both_graphs = VGroup(all_func, all_coeff)
+        both_graphs.arrange(RIGHT)
+        both_graphs.center()
+
+        x_label = axes_coeffs.get_x_axis_label(r"\mathrm{Re}")
+        x_label.move_to(axes_coeffs.coords_to_point(2, 0.5, 0))
+
+        y_label = axes_coeffs.get_y_axis_label(r"\mathrm{Im}")
+        y_label.move_to(axes_coeffs.coords_to_point(0.5, 2, 0))
+
+        z_label = MathTex("\omega")
+        z_label.move_to(axes_coeffs.coords_to_point(0.5, 0, 2))
+        z_label_graph = MathTex("\omega")
+        z_label_graph.move_to(axes_func.coords_to_point(0.5, 0, 3.5))
+
+        z_tick_labels_base = []
+        for ind in range(-3, 4):
+            if ind == 0:
+                continue
+
+            z_tick_labels_base.append(MathTex("{0:d}".format(ind), font_size=8.0))
+            z_tick_labels_base[-1].move_to(
+                axes_coeffs.coords_to_point(-0.2, 0.2, delta_z * ind)
+            )
+            z_tick_labels_base[-1].scale(0.6)
+
+        x_label_axes_coeffs = always_redraw(redraw_facing_camera(x_label, self))
+        y_label_axes_coeffs = always_redraw(redraw_facing_camera(y_label, self))
+        z_label_axes_coeffs = always_redraw(redraw_facing_camera(z_label, self))
+        z_label_axes_func = always_redraw(redraw_facing_camera(z_label_graph, self))
+        z_tick_labels_all = [
+            always_redraw(redraw_facing_camera(tick, self))
+            for tick in z_tick_labels_base
+        ]
+
+        all_coeff.add(x_label_axes_coeffs, y_label_axes_coeffs)
+
+        self.add(all_func, all_coeff)
+        # self.play(
+        #     LaggedStart(
+        #         *[
+        #             Create(obj)
+        #             for obj in [
+        #                 axes_func,
+        #                 graph,
+        #                 axes_coeffs,
+        #                 x_label_axes_coeffs,
+        #                 y_label_axes_coeffs,
+        #             ]
+        #         ],
+        #         run_time=4,
+        #         lag_ratio=0.75,
+        #     )
+        # )
+
+        x_reference_lines = []
+        t = np.linspace(-2, 5, 10)
+        for freq in range(-3, 4):
+            x_values = t
+            y_values = 10 * [0]
+            z_values = 10 * [delta_z * freq]
+
+            x_reference_lines.append(
+                Line(
+                    axes_func.coords_to_point(*[x_values[0], y_values[0], z_values[0]]),
+                    axes_func.coords_to_point(
+                        *[x_values[-1], y_values[-1], z_values[-1]]
+                    ),
+                )
+            )
+            if freq > 0:
+                x_reference_lines[-1].set_stroke(color=BLUE, opacity=0.5, width=1.5)
+            else:
+                x_reference_lines[-1].set_stroke(color=BLUE, opacity=0.8, width=1.5)
+
+        # The camera is auto set to PHI = 0 and THETA = -90
+        coeff_dots = []
+        coeff_lines = []
+        magnitude_trackers = []
+        theta_trackers = []
+        z_trackers = []
+
+        func_switcher = ValueTracker(1)
+
+        for i_freq, freq in enumerate(range(-3, 4)):
+
+            def create_dot_line_generator(freq):
+                z_tracker = ValueTracker(0)
+                magnitude_val = np.abs(
+                    self.interpolate_func_coeff(freq, func_switcher.get_value())
+                )
+
+                theta_val = np.angle(
+                    self.interpolate_func_coeff(freq, func_switcher.get_value())
+                )
+
+                def dot_generator():
+                    return Dot3D(
+                        point=axes_coeffs.coords_to_point(
+                            np.real(magnitude_val * np.exp(1j * theta_val)),
+                            np.imag(magnitude_val * np.exp(1j * theta_val)),
+                            z_tracker.get_value(),
+                        ),
+                        color=DARK_BLUE,
+                    )
+
+                def line_generator():
+                    return DashedLine(
+                        start=axes_coeffs.coords_to_point(
+                            0,
+                            0,
+                            z_tracker.get_value(),
+                        ),
+                        end=axes_coeffs.coords_to_point(
+                            np.real(magnitude_val * np.exp(1j * theta_val)),
+                            np.imag(magnitude_val * np.exp(1j * theta_val)),
+                            z_tracker.get_value(),
+                        ),
+                    )
+
+                return (
+                    magnitude_val,
+                    theta_val,
+                    z_tracker,
+                    dot_generator,
+                    line_generator,
+                )
+
+            (
+                current_magnitude_tracker,
+                current_theta_tracker,
+                current_z_tracker,
+                dot_generator,
+                line_generator,
+            ) = create_dot_line_generator(freq)
+
+            current_dot = always_redraw(dot_generator)
+            current_line = always_redraw(line_generator)
+
+            magnitude_trackers.append(current_magnitude_tracker)
+            theta_trackers.append(current_theta_tracker)
+            z_trackers.append(current_z_tracker)
+
+            coeff_dots.append(current_dot)
+            coeff_lines.append(current_line)
+
+            # coeff_dots[-1].set_stroke(color=DARK_BLUE, width=0.3)
+            # coeff_dots[-1].set_stroke(color=DARK_BLUE)
+
+        # print([coeff_dot.get_center()[2] for coeff_dot in coeff_dots])
+
+        opacity_trackers = [ValueTracker(1) for _ in range(-3, 4)]
+        basis_func = []
+        t = np.linspace(-1.5, 1.5, n_points)
+        for freq in range(-3, 4):
+
+            def create_func_generator(freq, axes):
+                def func_generator():
+                    x_values = t
+                    y_values = np.real(
+                        np.abs(
+                            self.interpolate_func_coeff(freq, func_switcher.get_value())
+                        )
+                        * np.exp(
+                            1j
+                            * np.angle(
+                                self.interpolate_func_coeff(
+                                    freq, func_switcher.get_value()
+                                )
+                            )
+                            + 1j * freq * t * 2 * np.pi / 1
+                        )
+                    )
+                    z_values = n_points * [z_trackers[freq + 3].get_value()]
+                    func = axes.get_line_graph(
+                        x_values=x_values,
+                        y_values=y_values,
+                        z_values=z_values,
+                        line_color=BLUE,
+                        add_vertex_dots=False,
+                    )
+                    func.set_stroke(
+                        color=DARK_BLUE,
+                        opacity=opacity_trackers[freq + 3].get_value(),
+                    )
+                    # if freq > 0:
+                    #     func.set_stroke(
+                    #         color=DARK_BLUE,
+                    #         opacity=opacity_trackers[freq + 3].get_value(),
+                    #         width=0.5,
+                    #     )
+                    # else:
+                    #     func.set_stroke(
+                    #         color=DARK_BLUE,
+                    #         opacity=opacity_trackers[freq + 3].get_value(),
+                    #     )
+                    return func
+
+                return func_generator
+
+            basis_func.append(
+                always_redraw(
+                    create_func_generator(
+                        freq,
+                        axes_func,  # , magnitude_trackers, theta_trackers, z_trackers
+                    )
+                )
+            )
+
+        self.wait()
+        self.add(*basis_func)
+        # self.play(
+        #     LaggedStart(
+        #         *[Create(obj) for obj in basis_func],
+        #         run_time=4,
+        #         lag_ratio=0.75,
+        #     )
+        # )
+
+        self.play(Write(z_label_axes_coeffs), Write(z_label_axes_func))
+        self.add(*z_tick_labels_all)
+
+        phi_cam, theta_cam, gamma_cam = get_euler_angles_from_rotation_matrix(
+            look_at(ORIGIN, self.rotated_camera_position, np.array([0, 1, 0]))
+        )
+        self.move_camera(
+            phi=phi_cam,
+            theta=theta_cam,
+            gamma=gamma_cam,
+        )
+
+        def surface_generator():
+            surf = ParametricSurface(
+                lambda u, v: axes_func.c2p(
+                    u,
+                    np.real(
+                        self.interpolate_func_coeff(v, func_switcher.get_value())
+                        * np.exp(1j * v * u * 2 * np.pi / 1)
+                    ),
+                    v,
+                ),
+                u_min=-1.5,
+                u_max=1.5,
+                v_min=-4,
+                v_max=4,
+                resolution=(30, 20),
+            )
+            surf.set_style(
+                fill_opacity=0.3,
+                stroke_color=WHITE,
+                stroke_width=0.5,
+                stroke_opacity=0.5,
+            )
+            return surf
+
+        surface = always_redraw(surface_generator)
+
+        # surface.set_fill_by_value(
+        #     axes=axes_coeffs, colors=[(RED, -0.4), (YELLOW, 0), (GREEN, 0.4)]
+        # )
+        self.add(surface)
+
+        graph2 = always_redraw(
+            lambda: axes_coeffs.get_parametric_curve(
+                lambda w: np.array(
+                    [
+                        np.real(
+                            self.interpolate_func_coeff(w, func_switcher.get_value())
+                        ),
+                        np.imag(
+                            self.interpolate_func_coeff(w, func_switcher.get_value())
+                        ),
+                        w,
+                    ]
+                ),
+                t_range=[-4, 4],
+                color=DARK_BLUE,
+            )
+        )
+        self.add(graph2)
+
+        self.play(
+            *[
+                z_tracker.animate.set_value(freq * delta_z)
+                for freq, z_tracker in zip(range(-3, 4), z_trackers)
+            ],
+        )
+        self.play(func_switcher.animate.set_value(0), run_time=4)
+        # # self.play(*[Create(line) for line in x_reference_lines])
+        # self.wait()
+        # # self.play(
+        # #     *[
+        # #         opacity_tracker.animate.set_value(1)
+        # #         if freq <= 0
+        # #         else opacity_tracker.animate.set_value(0.5)
+        # #         for freq, opacity_tracker in zip(range(-3, 4), opacity_trackers)
+        # #     ],
+        # # )
+        # #
+        # # print([z_tracker.get_value() for z_tracker in z_trackers])
+        #
+        # # self.play(LaggedStart(*[FadeIn(object) for object in coeff_dots + coeff_lines]))
+        # self.add(*coeff_dots, *coeff_lines)
+        # self.wait()
+        # np.random.seed(42)
+        # random_magnitudes = -1 + 2 * np.random.random(7)
+        # random_thetas = -np.pi + 2 * np.pi * np.random.random(7)
+        # # self.play(
+        # #     *[
+        # #         magnitude.animate.set_value(val)
+        # #         for val, magnitude in zip(random_magnitudes, magnitude_trackers)
+        # #     ],
+        # #     *[
+        # #         theta.animate.set_value(val)
+        # #         for val, theta in zip(random_thetas, theta_trackers)
+        # #     ],
+        # #     run_time=3,
+        # # )
+        #
+        # # self.play(
+        # #     *[
+        # #         magnitude.animate.set_value(val)
+        # #         for val, magnitude in zip(coeff_magnitudes, magnitude_trackers)
+        # #     ],
+        # #     *[
+        # #         theta.animate.set_value(val)
+        # #         for val, theta in zip(coeff_thetas, theta_trackers)
+        # #     ],
+        # #     run_time=3,
+        # # )
+        # self.wait(2)
+        #
+        # graph_fourier_approx = axes_func.get_graph(
+        #     lambda t: np.real(
+        #         np.sum(
+        #             [
+        #                 fourier_coeffs[n + n_fourier_coeffs]
+        #                 * np.exp(1j * t * 2 * np.pi * n)
+        #                 for n in range(-n_fourier_coeffs, n_fourier_coeffs + 1)
+        #             ]
+        #         )
+        #     ),
+        #     x_range=[-1.5, 1.5, 1e-3],
+        #     color=ORANGE,
+        # )
+        # # self.play(
+        # #     *[
+        # #         ReplacementTransform(basis, graph_fourier_approx)
+        # #         for basis in basis_func
+        # #     ],
+        # #     *[
+        # #         z_tracker.animate.set_value(0)
+        # #         for freq, z_tracker in zip(range(-3, 4), z_trackers)
+        # #     ],
+        # # )
+        # # self.remove(*basis_func)
+        # # self.remove(*coeff_lines)
+        # # self.add(graph_fourier_approx)
+        # # self.move_camera(
+        # #     phi=0,
+        # #     theta=-90 * DEGREES,
+        # #     gamma=0,
+        # # )
+        self.wait(10)
+
+
+class TestScene(Scene):
+    def construct(self):
+        title = Tex("Space", " of all ", "triangles")
+        title.scale(1.5)
+        title.to_edge(UP)
+
+        question = Tex("What ", "is ", "a\\\\", "moduli ", "space", "?")
+        question.scale(2)
+
+        self.play(
+            LaggedStartMap(FadeIn, question),
+        )
+        self.wait()
+
+        self.play(
+            ReplacementTransform(
+                question.get_part_by_tex("space"),
+                title.get_part_by_tex("Space"),
+            ),
+            FadeOut(question[:-2]),
+            FadeOut(question[-1]),
+            FadeIn(title[1:]),
+        )
+
+        self.wait()
 
 
 def fourier_series_coeff_numpy(f, T, N, return_complex=False):
@@ -1858,3 +2358,17 @@ def get_euler_angles_from_rotation_matrix(rot_mat):
     gamma_cam = -np.arctan2(rot_mat[0, 2], rot_mat[1, 2])
 
     return -phi_cam, -theta_cam - 90 * DEGREES, gamma_cam
+
+
+def redraw_facing_camera(object, scene):
+    """Function to achieve "track to camera" or "billboard" effect."""
+
+    def redraw_func():
+        new_obj = object.copy()
+        new_obj.apply_matrix(
+            scene.camera.get_rotation_matrix().T,
+            about_point=new_obj.get_center(),
+        )
+        return new_obj
+
+    return redraw_func
