@@ -199,7 +199,7 @@ How can we interpret it?
 
 \section{Vector/function analogy}
 
-To facilitate our insight, we will use the fact that functions and vectors are very similar in some ways, and this can be rigorously defined.
+To ease our insight, we will use the fact that functions and vectors are very similar in some ways, and this can be rigorously defined.
 
 We can think about a vector, with four components, for example, as a function of sorts.
 Its domain is only four numbers, and the value of the function is equal to the corresponding component of the vector.
@@ -221,20 +221,37 @@ The formula for the internal products must be upgraded like this, where the over
 
 \section{Vector explanation}
 
-So now we are going to put this analogy to use.
+So now we are going to put this connection to use.
 Remember, we are trying to understand the Fourier transform relative to differential equations.
 Let us consider the simplest case.
 
-Since we will start with normal vectors, imagine that the operator \(D\) is not the differentiation operator but some symmetric linear transformation.
-We can think about it as a matrix.
-It is still an operator, so the conclusions we will reach regarding operators, in general, will still be valid when we look at the differentiation operator.
+We will start our exploration with ordinary vectors, meaning the usual arrows that spring to mind.
 We also switch to more suggestive symbols for this context.
+Now, \(\bm x\) and \(\bm b\) are vectors.
+And the linear operator \(D\) is not the differentiation operator but some linear transformation.
+We can think about it as a matrix.
+For our purposes, we will assume that \(D\) is a symmetric matrix or linear operator.
+Shortly, we will see why.
+It is still a linear operator, so the conclusions we will reach regarding operators, in general, will still be valid when we look at the differentiation operator, later.
 
 Looking at this equation, we can think to ourselves, in an ideal world, what would be the slightest effect $D$ could have on a vector.
 Perhaps one of the least complicated effects it could have is simply multiplying a vector by a constant.
-Obviously, this can be true for every vector, so we ask for this operator $D$, particularly the vectors that don't change direction.
-This is the well-known eigenproblem, and the pairs of vectors and constants found are known as the eigenvectors and eigenvalues of the operator.
+Obviously, this can be true for every vector, so we are asking for the vectors that don't change direction after applying the operator $D$.
+This is the well-known eigenvalue problem, and the pairs of vectors and constants found are known as the eigenvectors and eigenvalues of the operator.
 Because we decided that $D$ is symmetric, the eigenvectors will be orthogonal, and the eigenvalues will be real values.
+
+For the isotropic damage model modelling the Mullins effect, the elasticity tensor \(\mathbb C\) is obtained by
+ \[
+\dot{\mathbf{S} }=
+\begin{cases}
+\left[(1-\zeta) \mathbb{C}_{0}- \underbrace{\zeta^{\prime}(\alpha) \mathbf{S}_{0} \otimes \mathbf{S}_{0} }_{\text{stress softening} }\right]: \frac{\dot{\mathbf{C} } }{2}  & \text { if } \phi=0 \text { and } \dot{f}>0 \\
+(1-\zeta) \mathbb{C}_{0}: \frac{\dot{\mathbf{C} } }{2} & \text { otherwise }
+\end{cases}
+\]
+with the effective elasticity tensor \(\mathbb{C}_{0}\) in the material description. For an undamaged material, \(\mathbb{C}_{0}\) is defined to be
+\[
+\mathbb{C}_{0}=2 \frac{\partial \mathbf{S}_{0}(\mathbf{C})}{\partial \mathbf{C} }.
+\]
 
 Now, we can express any vector using the eigenvectors as a basis.
 This can be done by projecting the vector using the inner product in each direction-
@@ -242,9 +259,19 @@ Summing the contributions in each direction, we get our vector back.
 And why is this relevant?
 
 Let's see what happens when we use this on the equation.
+Moving \(D\) to right we must now consider its transpose.
 Using the fact that $D$ is symmetric, we now have $D v_i$. We know this the same as multiplying $v_i$ by its corresponding eigenvalue.
 And just like that, we don't have in our problem any $D$s. The problem has become a system of equations.
 So we can find the components of the unknown vector $\bm x$.
+
+What is the geometric meaning of this?
+Using our original description of the problem the vectors are describing using the two unit vectors \(e_1\) and \(e_2\).
+If we choose the the eigenvectors of the linear transformation as basis vectors, the linear transformation is much simpler being just a contraction or extension in perpendicular directions.
+
+Remember we are trying to find a vector x such that after applying the linear transformation \(D\) it is equal to another vector \(\bm b\).
+
+
+
 
 \section{Moving on to functions}
 

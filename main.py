@@ -1,4 +1,5 @@
 from manim import *
+from manim.mobject.geometry import ArrowTriangleTip
 
 import numpy as np
 
@@ -28,21 +29,347 @@ std_wait_time = 3
 
 
 class VectorScene(Scene):
+    def setup(self):
+        self.lin_trans = np.array([[3, 0.3], [0.3, 4]]) / 4
+        self.eig_vals, self.eig_vecs = np.linalg.eig(self.lin_trans)
+        self.diag_lin_trans = np.array([[self.eig_vals[0], 0], [0, self.eig_vals[1]]])
+        self.rot_mat = self.eig_vecs.T
+        self.b_trans = np.array([0.8, 1.6])
+        self.sol_trans = self.b_trans / self.eig_vals
+
+    def show_linear_transform(self):
+        def to_global_coord(point):
+            return np.array(point) + self.plane_origin_loc
+
+        lin_trans = self.lin_trans
+        self.plane = NumberPlane(
+            x_range=[-5, 5, 1], y_range=[-4, 4, 1], x_length=5, y_length=5
+        )
+        plane = self.plane
+
+        plane.move_to(self.frame_lin_trans.get_center())
+        self.plane_origin_loc = self.frame_lin_trans.get_center()
+
+        unit_vector_x = Arrow(
+            self.plane_origin_loc,
+            np.array([1, 0, 0]) + self.plane_origin_loc,
+            buff=0,
+            stroke_width=2,
+            max_tip_length_to_length_ratio=10,
+            max_stroke_width_to_length_ratio=20,
+            color=BLUE,
+        )
+        unit_vector_y = Arrow(
+            self.plane_origin_loc,
+            np.array([0, 1, 0]) + self.plane_origin_loc,
+            buff=0,
+            stroke_width=2,
+            max_tip_length_to_length_ratio=10,
+            max_stroke_width_to_length_ratio=20,
+            color=BLUE,
+        )
+
+        v_1 = MathTex(r"\hat{\bm e}_1", color=BLUE)
+        v_2 = MathTex(r"\hat{\bm e}_2", color=BLUE)
+        v_1.next_to(unit_vector_x, DOWN)
+        v_2.next_to(unit_vector_y, LEFT)
+
+        self.play(
+            DrawBorderThenFill(plane),
+            GrowArrow(unit_vector_x),
+            GrowArrow(unit_vector_y),
+            Write(v_1),
+            Write(v_2),
+            run_time=2,
+        )
+        self.wait(2)
+
+        self.play(
+            plane.animate.apply_matrix(lin_trans, about_point=self.plane_origin_loc),
+            unit_vector_x.animate.put_start_and_end_on(
+                self.plane_origin_loc,
+                to_global_coord(np.append(lin_trans.dot([1, 0]), 0)),
+            ),
+            unit_vector_y.animate.put_start_and_end_on(
+                self.plane_origin_loc,
+                to_global_coord(np.append(lin_trans.dot([0, 1]), 0)),
+            ),
+        )
+
+        self.wait(2)
+        self.play(
+            plane.animate.apply_matrix(
+                np.linalg.inv(lin_trans), about_point=self.plane_origin_loc
+            ),
+            Uncreate(unit_vector_x),
+            Uncreate(unit_vector_y),
+            Uncreate(v_1),
+            Uncreate(v_2),
+        )
+
+    def show_linear_transform_new_coords(self):
+        def to_global_coord(point):
+            return np.array(point) + self.plane_origin_loc
+
+        lin_trans = self.diag_lin_trans
+        self.plane_new_coords = NumberPlane(
+            x_range=[-5, 5, 1], y_range=[-4, 4, 1], x_length=5, y_length=5
+        )
+        plane = self.plane_new_coords
+
+        plane.move_to(self.frame_text.get_center())
+        self.plane_new_coords_origin_loc = (
+            plane_origin_loc
+        ) = self.frame_text.get_center()
+
+        # unit_vector_x = Arrow(
+        #     self.plane_origin_loc,
+        #     np.array([1, 0, 0]) + self.plane_origin_loc,
+        #     buff=0,
+        #     stroke_width=2,
+        #     max_tip_length_to_length_ratio=10,
+        #     max_stroke_width_to_length_ratio=20,
+        #     color=BLUE,
+        # )
+        # unit_vector_y = Arrow(
+        #     self.plane_origin_loc,
+        #     np.array([0, 1, 0]) + self.plane_origin_loc,
+        #     buff=0,
+        #     stroke_width=2,
+        #     max_tip_length_to_length_ratio=10,
+        #     max_stroke_width_to_length_ratio=20,
+        #     color=BLUE,
+        # )
+
+        v_1 = MathTex(r"\hat{\bm e}_1", color=BLUE)
+        v_2 = MathTex(r"\hat{\bm e}_2", color=BLUE)
+        # v_1.next_to(unit_vector_x, DOWN)
+        # v_2.next_to(unit_vector_y, LEFT)
+
+        local_eig_vec_1 = (
+            self.eig_vec_1.copy()
+            # .apply_matrix(self.rot_mat, about_point=self.frame_lin_trans.get_center())
+            # .shift(self.frame_text.get_center() - self.frame_lin_trans.get_center())
+        )
+        local_eig_vec_2 = (
+            self.eig_vec_2.copy()
+            # .apply_matrix(self.rot_mat, about_point=self.frame_lin_trans.get_center())
+            # .shift(self.frame_text.get_center() - self.frame_lin_trans.get_center())
+        )
+
+        theta = -np.arccos(self.rot_mat[0, 0])
+        # self.play(
+        #     LaggedStart(
+        #         DrawBorderThenFill(plane),
+        #         ReplacementTransform(self.eig_vec_1.copy(), local_eig_vec_1),
+        #         ReplacementTransform(self.eig_vec_2.copy(), local_eig_vec_2),
+        #     )
+        #     Rotate(
+        #         local_eig_vec_1,
+        #         angle=theta,
+        #         about_point=self.frame_lin_trans.get_center(),
+        #     ),
+        #     Rotate(
+        #         local_eig_vec_2,
+        #         angle=theta,
+        #         about_point=self.frame_lin_trans.get_center(),
+        #     ),
+        #     # local_eig_vec_1.animate.apply_matrix(
+        #     #     self.rot_mat, about_point=self.frame_lin_trans.get_center()
+        #     # ),
+        #     # local_eig_vec_2.animate.apply_matrix(
+        #     #     self.rot_mat, about_point=self.frame_lin_trans.get_center()
+        #     # ),
+        # )
+        # )
+        self.play(
+            local_eig_vec_1.animate.shift(
+                self.frame_text.get_center() - self.frame_lin_trans.get_center()
+            ),
+            local_eig_vec_2.animate.shift(
+                self.frame_text.get_center() - self.frame_lin_trans.get_center()
+            ),
+        )
+        self.play(
+            Rotate(
+                local_eig_vec_1,
+                angle=theta,
+                about_point=self.frame_text.get_center(),
+            ),
+            Rotate(
+                local_eig_vec_2,
+                angle=theta,
+                about_point=self.frame_text.get_center(),
+            ),
+        )
+        self.play(Create(plane))
+
+        self.wait(2)
+
+        self.play(
+            plane.animate.apply_matrix(lin_trans, about_point=plane_origin_loc),
+            rate_func=there_and_back_with_pause,
+        )
+
+    def show_lin_trans_and_eigen_vec(self):
+        def to_global_coord(point):
+            return np.array(point) + self.plane_origin_loc
+
+        plane = self.plane
+        lin_trans = self.lin_trans
+        eig_vals = self.eig_vals
+        eig_vecs = self.eig_vecs
+
+        eig_vec_1 = self.eig_vec_1 = Arrow(
+            self.plane_origin_loc,
+            np.array([comp for comp in eig_vecs[:, 0]] + [0]) + self.plane_origin_loc,
+            buff=0,
+            stroke_width=2,
+            max_tip_length_to_length_ratio=10,
+            max_stroke_width_to_length_ratio=20,
+            color=ORANGE,
+            tip_shape=ArrowTriangleTip,
+        )
+        eig_vec_1_to_transform = eig_vec_1.copy()
+        eig_vec_1_transformed = Arrow(
+            self.plane_origin_loc,
+            np.array([comp * eig_vals[0] for comp in eig_vecs[:, 0]] + [0])
+            + self.plane_origin_loc,
+            buff=0,
+            stroke_width=2,
+            max_tip_length_to_length_ratio=10,
+            max_stroke_width_to_length_ratio=20,
+            color=GREEN,
+            # tip_shape=ArrowTriangleTip,
+        )
+
+        eig_vec_2 = self.eig_vec_2 = Arrow(
+            self.plane_origin_loc,
+            np.array([comp for comp in eig_vecs[:, 1]] + [0]) + self.plane_origin_loc,
+            buff=0,
+            stroke_width=2,
+            max_tip_length_to_length_ratio=10,
+            max_stroke_width_to_length_ratio=20,
+            color=ORANGE,
+            tip_shape=ArrowTriangleTip,
+        )
+        eig_vec_2_to_transform = eig_vec_2.copy()
+        eig_vec_2_transformed = Arrow(
+            self.plane_origin_loc,
+            np.array([comp * eig_vals[1] for comp in eig_vecs[:, 1]] + [0])
+            + self.plane_origin_loc,
+            buff=0,
+            stroke_width=2,
+            max_tip_length_to_length_ratio=10,
+            max_stroke_width_to_length_ratio=20,
+            color=GREEN,
+            # tip_shape=ArrowTriangleTip,
+        )
+
+        v_1 = MathTex(r"\bm v_1", color=ORANGE)
+        v_2 = MathTex(r"\bm v_2", color=ORANGE)
+        v_1.next_to(eig_vec_1, UP)
+        v_2.next_to(eig_vec_2, RIGHT)
+
+        self.play(DrawBorderThenFill(eig_vec_1), DrawBorderThenFill(eig_vec_2))
+        self.play(Write(v_1), Write(v_2))
+
+        self.wait(6)
+
+        self.play(
+            plane.animate.apply_matrix(lin_trans, about_point=self.plane_origin_loc),
+            eig_vec_1_to_transform.animate.apply_matrix(
+                lin_trans, about_point=self.plane_origin_loc
+            ),
+            eig_vec_2_to_transform.animate.apply_matrix(
+                lin_trans, about_point=self.plane_origin_loc
+            ),
+        )
+
+        self.remove(eig_vec_1_to_transform)
+        self.add(eig_vec_1_transformed)
+        self.add(eig_vec_1)
+        self.remove(eig_vec_2_to_transform)
+        self.add(eig_vec_2_transformed)
+        self.add(eig_vec_2)
+
+        self.wait(2)
+
+        # comp_1_tex = MathTex(r"( \bm x, \bm v_1)", color=BLUE)
+        # comp_2_tex = MathTex(r"( \bm x, \bm v_2)", color=BLUE)
+        # random_vec_coord = np.array([1, 1, 0])
+        # random_vec = Arrow(
+        #     self.plane_origin_loc,
+        #     np.array(random_vec_coord) + self.plane_origin_loc,
+        #     buff=0,
+        #     stroke_width=2,
+        #     max_tip_length_to_length_ratio=10,
+        #     max_stroke_width_to_length_ratio=20,
+        #     color=BLUE,
+        #     # tip_shape=ArrowTriangleTip,
+        # )
+        # eig_1 = np.zeros(3)
+        # eig_2 = np.zeros(3)
+        # eig_1[:2] = eig_vecs[:, 0]
+        # eig_2[:2] = eig_vecs[:, 1]
+        # comp_1 = eig_1.dot(random_vec_coord)
+        # comp_2 = eig_2.dot(random_vec_coord)
+        # brace_comp_1 = BraceBetweenPoints(
+        #     self.plane_origin_loc,
+        #     np.array(comp_1 * eig_1) + self.plane_origin_loc,
+        #     buff=0,
+        # )
+        # line_comp_1 = DashedLine(
+        #     to_global_coord(random_vec_coord),
+        #     to_global_coord(random_vec_coord - comp_1 * eig_1),
+        # )
+        # line_comp_1.stroke_width = 0.5
+        # line_comp_1.opacity = 0.5
+        # line_comp_2 = DashedLine(
+        #     to_global_coord(random_vec_coord),
+        #     to_global_coord(random_vec_coord - comp_2 * eig_2),
+        # )
+        # brace_comp_2 = BraceBetweenPoints(
+        #     to_global_coord(comp_2 * eig_2), self.plane_origin_loc, buff=0
+        # )
+        # line_comp_2.stroke_width = 0.5
+        # line_comp_2.opacity = 0.5
+        # self.play(*[Unwrite(mobject) for mobject in [v_1, v_2]])
+        # self.play(
+        #     *[
+        #         DrawBorderThenFill(mobject)
+        #         for mobject in [
+        #             random_vec,
+        #             line_comp_1,
+        #             line_comp_2,
+        #             brace_comp_1,
+        #             brace_comp_2,
+        #         ]
+        #     ],
+        #     run_time=std_wait_time,
+        # )
+        # comp_1_tex.next_to(brace_comp_2, LEFT)
+        # comp_2_tex.next_to(brace_comp_1, DOWN)
+        # self.play(*[Write(mobject) for mobject in [comp_1_tex, comp_2_tex]])
+        # comp_1_tex.add_background_rectangle()
+        # comp_2_tex.add_background_rectangle()
+
     def construct(self):
 
-        frame_lin_trans = Rectangle(height=6.0, width=6.0)
-        frame_lin_trans.to_edge(LEFT, buff=1)
-        self.add(frame_lin_trans)
+        self.frame_lin_trans = Rectangle(height=6.0, width=6.0)
+        self.frame_lin_trans.to_edge(LEFT, buff=1)
 
-        frame_text = Rectangle(height=6.0, width=7.0)
+        self.frame_text = Rectangle(height=6.0, width=7.0)
+        frame_text = self.frame_text
         frame_text.to_edge(RIGHT, buff=1)
         frame_u = Rectangle(height=2, width=14.0)
-        large_v_group = VGroup(frame_lin_trans, frame_text)
+        large_v_group = VGroup(self.frame_lin_trans, frame_text)
         large_v_group.arrange(RIGHT, buff=1)
-        full_group = VGroup(frame_u, large_v_group)
-        full_group.arrange(DOWN)
+        full_group = VGroup(large_v_group)  # frame_u, large_v_group)
+        # full_group.arrange(DOWN)
         full_group.center()
 
+        ORIGIN = np.array([0, 0, 0])
         # self.add(full_group)
 
         # self.add(frame_text)
@@ -51,69 +378,49 @@ class VectorScene(Scene):
 
         all_text_1st_phase = VGroup()
 
-        diff_eq = MathTex(r"m{D}^2 f(t) + c {{Df(t)}} + kf(t) {{=}} F(t)", color=BLUE)
-        diff_eq_simple = MathTex(r"{{Df(t)}}{{=}} {{F(t)}}", color=BLUE)
+        diff_eq = MathTex(*r"m D^2 f(t) + c D f(t) +kf(t) = F(t)".split(), color=BLUE)
+        diff_eq_simple = MathTex(*r"D f(t) = F(t)".split(), color=BLUE)
 
-        problem_vector = MathTex(r"{{D\bm x}} {{=}} {{\bm b}}", color=BLUE)
+        problem_vector = MathTex(*r"D \bm{x} = \bm{b}".split(), color=BLUE)
+        problem_vector_final = problem_vector.copy()
         problem_vector_replaced_1_a = MathTex(
-            r"\sum_i ( {{D\bm x}}, \bm v_i) \bm v_i {{=}} \sum_i ( {{\bm b}}, \bm v_i) \bm v_i",
-            color=BLUE,
-        )
-        problem_vector_replaced_1_b = MathTex(
-            r"{{\sum_i (}} {{D}}{{\bm x}}, {{\bm v_i)}} {{\bm v_i}} {{=}} {{\sum_i ( \bm b, \bm v_i) \bm v_i}}",
+            *r"\sum_{i=1}^2 ( D \bm{x} , \bm{v}_i ) \bm{v}_i = \sum_{i=1}^2 ( \bm{b} , \bm{v}_i ) \bm{v}_i".split(),
             color=BLUE,
         )
         problem_vector_replaced_2_a = MathTex(
-            r"{{\sum_i (}}{{\bm x}}, {{D}}^T{{\bm v_i)}} {{\bm v_i}} {{=}} {{\sum_i ( \bm b, \bm v_i) \bm v_i}}",
-            color=BLUE,
-        )
-        problem_vector_replaced_2_b = MathTex(
-            r"{{\sum_i (\bm x}}, {{D}}^T{{\bm v_i) \bm v_i = \sum_i ( \bm b, \bm v_i) \bm v_i}}",
+            *r"\sum_{i=1}^2 ( \bm{x} , D^T \bm{v}_i ) \bm{v}_i = \sum_{i=1}^2 ( \bm{b} , \bm{v}_i ) \bm{v}_i".split(),
             color=BLUE,
         )
         problem_vector_replaced_2_5_a = MathTex(
-            r"{{\sum_i (\bm x}}, {{D}}{{\bm v_i) \bm v_i = \sum_i ( \bm b, \bm v_i) \bm v_i}}",
-            color=BLUE,
-        )
-        problem_vector_replaced_2_5_b = MathTex(
-            r"{{\sum_i}} {{( \bm x, D\bm v_i)}} {{\bm v_i}} {{=}} {{\sum_i ( \bm b, \bm v_i) \bm v_i}}",
+            *r"\sum_{i=1}^2 ( \bm{x} , D \bm{v}_i ) \bm{v}_i = \sum_{i=1}^2 ( \bm{b} , \bm{v}_i ) \bm{v}_i".split(),
             color=BLUE,
         )
         problem_vector_replaced_3_a = MathTex(
-            r"{{\sum_i}} {{( \bm x, \lambda_i\bm v_i)}}{{\bm v_i}} {{=}} {{\sum_i ( \bm b, \bm v_i) \bm v_i}}",
-            color=BLUE,
-        )
-        problem_vector_replaced_3_b = MathTex(
-            r"{{\sum_i}} {{( \bm x,}}{{\lambda_i}} {{\bm v_i)\bm v_i}} {{=}} \sum_i {{( \bm b, \bm v_i)}} \bm v_i",
+            *r"\sum_{i=1}^2 ( \bm{x} , \lambda_i \bm{v}_i ) \bm{v}_i = \sum_{i=1}^2 ( \bm{b} , \bm{v}_i ) \bm{v}_i".split(),
             color=BLUE,
         )
         problem_vector_replaced_3_5_a = MathTex(
-            r"{\sum_i} {{\lambda_i}}{{( \bm x,}} {{\bm v_i)\bm v_i}} {{=}} \sum_i {{( \bm b, \bm v_i)}} \bm v_i",
-            color=BLUE,
-        )
-        problem_vector_replaced_3_5_b = MathTex(
-            r"\sum_i {{\lambda_i( \bm x, \bm v_i)}}\bm v_i {{=}} \sum_i {{( \bm b, \bm v_i)}} \bm v_i",
+            *r"\sum_{i=1}^2 \lambda_i ( \bm{x} , \bm{v}_i ) \bm{v}_i = \sum_{i=1}^2 ( \bm{b} , \bm{v}_i ) \bm{v}_i".split(),
             color=BLUE,
         )
         problem_vector_replaced_4_a = MathTex(
-            r"{{\lambda_i( \bm x, \bm v_i)}} {{=}} {{( \bm b, \bm v_i)}},\quad i=1,2",
-            color=BLUE,
-        )
-        problem_vector_replaced_4_b = MathTex(
-            r"{{( \bm x, \bm v_i)}}{{\lambda_i}} {{=}} {{( \bm b, \bm v_i)}}{{,\quad i=1,2}}",
+            *r"\lambda_i ( \bm{x} , \bm{v}_i ) = ( \bm{b} , \bm{v}_i ) ,{\quad}i=1,2".split(),
             color=BLUE,
         )
         problem_vector_replaced_5 = MathTex(
-            r"{{( \bm x, \bm v_i)}} {{=}} {{( \bm b, \bm v_i)}}/{{\lambda_i}}{{,\quad i=1,2}}",
+            *r"( \bm{x} , \bm{v}_i ) = ( \bm{b} , \bm{v}_i ) / \lambda_i ,{\quad}i=1,2".split(),
             color=BLUE,
         )
+        easy_coords = problem_vector_replaced_5.copy()
         all_text_1st_phase.add(problem_vector)
 
         text_lin_trans = Tex("{{$D$}} is symmetric {{$(D=D^T)$}}")
         text_lin_trans.get_part_by_tex(r"$(D=D^T)$").set_color(BLUE)
         all_text_1st_phase.add(text_lin_trans)
 
-        question_eigen = Tex("Ideally, what is the simplest effect $D$ could have?")
+        question_eigen = Tex(
+            "Ideally, what is the simplest\\\\effect $D$ could have on some vector $\\bm v$?"
+        )
         eigen_problem_vector = MathTex(
             r"{{D \bm v = \lambda \bm v}} {{\to \begin{cases} \bm v_i,\\ \lambda_i, \end{cases} i=1,2}}",
             color=BLUE,
@@ -121,55 +428,148 @@ class VectorScene(Scene):
         all_text_1st_phase.add(eigen_problem_vector)
 
         vec_in_phase_space = MathTex(
-            r"\bm x = \sum_i {{( \bm x, \bm v_i)}} \bm v_i", color=BLUE
+            *r"\bm{x} = \sum_{i=1}^2 ( \bm{x} , \bm{v}_i ) \bm{v}_i".split(),
+            color=BLUE
+            # *r"\bm{x} = \sum_i( \bm{x} ,\bm{v}_i)\bm{v}_i".split(), color=BLUE
         )
         all_text_1st_phase.add(vec_in_phase_space)
 
-        title.move_to(frame_u.get_center())
-        all_text_1st_phase.arrange(DOWN, buff=std_line_buff)
-        all_text_1st_phase.move_to(frame_text.get_center())
+        # self.play(Write(title))
+        # self.wait(2)
 
-        diff_eq.move_to(problem_vector.get_center())
-        diff_eq_simple.move_to(problem_vector.get_center())
-
-        problem_vector_replaced_1_a.move_to(problem_vector.get_center())
-        problem_vector_replaced_1_b.move_to(problem_vector.get_center())
-        problem_vector_replaced_2_a.move_to(problem_vector.get_center())
-        problem_vector_replaced_2_b.move_to(problem_vector.get_center())
-        problem_vector_replaced_2_5_a.move_to(problem_vector.get_center())
-        problem_vector_replaced_2_5_b.move_to(problem_vector.get_center())
-        problem_vector_replaced_3_a.move_to(problem_vector.get_center())
-        problem_vector_replaced_3_b.move_to(problem_vector.get_center())
-        problem_vector_replaced_3_5_a.move_to(problem_vector.get_center())
-        problem_vector_replaced_3_5_b.move_to(problem_vector.get_center())
-        problem_vector_replaced_4_a.move_to(problem_vector.get_center())
-        problem_vector_replaced_4_b.move_to(problem_vector.get_center())
-        problem_vector_replaced_5.move_to(problem_vector.get_center())
-
-        self.play(Write(title))
-        self.wait(2)
+        self.wait(4)
+        # So now we are going to put this analogy to use.
+        # Remember, we are trying to understand the Fourier transform relative to differential equations.
         self.play(Write(diff_eq))
 
-        operator_symbol = diff_eq.get_parts_by_tex("{D}")
-        import pdb
-
-        pdb.set_trace()
-        operator_label = Tex(r"Linear\\Operator").next_to(operator_symbol, buff=0.3)
-        operator_arrow = Arrow(operator_symbol, operator_label, buff=0.1)
-
-        self.play(GrowArrow(operator_arrow))
-
-        self.wait(2)
-        self.play(ReplacementTransform(diff_eq, diff_eq_simple))
-        self.wait(2)
-        self.play(ReplacementTransform(diff_eq_simple, problem_vector))
-        self.wait(2)
-        self.play(Write(text_lin_trans))
-        self.wait(2)
+        self.wait(8)
+        # Let us consider the simplest case.
         self.play(
-            Write(eigen_problem_vector.get_part_by_tex(r"D \bm v = \lambda \bm v"))
+            ReplacementTransform(VGroup(*diff_eq[5:7], *diff_eq[8:]), diff_eq_simple),
+            FadeOut(diff_eq[:5] + diff_eq[7], shift=DOWN),
         )
+
+        operator_symbol = diff_eq_simple.get_parts_by_tex("D")[0]
+        lin_operator_label = (
+            Tex(r"Linear\\Operator").next_to(operator_symbol, UL).scale(0.8)
+        )
+        operator_arrow = Arrow(
+            lin_operator_label.get_bottom(),
+            operator_symbol.get_top(),
+            stroke_width=2,
+            max_tip_length_to_length_ratio=0.15,
+        )
+        self.play(GrowArrow(operator_arrow), Write(lin_operator_label))
+
+        operator_symbol_in_vec_eq = problem_vector.get_parts_by_tex("D")
+
+        # We will start our exploration with ordinary vectors, meaning the usual arrows that spring to mind.
+        # We also switch to more suggestive symbols for this context.
+        self.wait(18)
+        self.play(
+            ReplacementTransform(
+                diff_eq_simple,
+                problem_vector,
+            ),
+            FadeOut(operator_arrow),
+            FadeOut(lin_operator_label),
+        )
+
+        self.play(problem_vector.animate.move_to(frame_text.get_top() + 0.5 * DOWN))
+        lin_trans_label = (
+            Tex(r"Linear\\Transformation")
+            .next_to(operator_symbol_in_vec_eq, UL)
+            .scale(0.8)
+        )
+        example_matrix = (
+            MathTex(r"\left[\begin{array}{cc} 3 & 0.3 \\  0.3 & 4\end{array}\right]")
+            .move_to(lin_trans_label.get_center())
+            .scale(0.8)
+        )
+
+        operator_arrow.put_start_and_end_on(
+            lin_trans_label.get_bottom() + 0.1 * DOWN,
+            operator_symbol_in_vec_eq.get_left(),
+        )
+        vector_label = (
+            Tex("Vectors").next_to(problem_vector[-1], UP, buff=0.7).scale(0.8)
+        )
+        vector_arrow_1 = operator_arrow.copy().put_start_and_end_on(
+            vector_label.get_bottom() + 0.1 * DOWN,
+            problem_vector[1].get_top() + 0.1 * UP,
+        )
+        vector_arrow_2 = operator_arrow.copy().put_start_and_end_on(
+            vector_label.get_bottom() + 0.1 * DOWN,
+            problem_vector[3].get_top() + 0.1 * UP,
+        )
+
+        # Now, \(\bm x\) and \(\bm b\) are vectors.
+        # And the linear operator \(D\) is not the differentiation operator but some linear transformation.
+        self.play(
+            GrowArrow(operator_arrow),
+            Write(lin_trans_label),
+            GrowArrow(vector_arrow_1),
+            GrowArrow(vector_arrow_2),
+            Write(vector_label),
+        )
+
+        # We can think about it as a matrix.
+        # For our purposes, we will assume that \(D\) is symmetric matrix or linear operator.
+        # Shortly, we will see why.
+        # It is still a linear operator, so the conclusions we will reach regarding
+        # operators, in general, will still be valid when we look at the differentiation
+        # operator.
+        self.wait()
+        self.play(ReplacementTransform(lin_trans_label, example_matrix))
+
+        self.wait(4)
+
+        text_lin_trans.next_to(problem_vector, DOWN, buff=1)
+        self.play(Write(text_lin_trans))
+
+        self.show_linear_transform()
+
         self.wait(2)
+
+        self.play(
+            *[
+                FadeOut(obj)
+                for obj in [
+                    operator_arrow,
+                    example_matrix,
+                    vector_arrow_1,
+                    vector_arrow_2,
+                    vector_label,
+                ]
+            ]
+        )
+
+        question_eigen.next_to(text_lin_trans, DOWN, buff=1)
+        eigen_problem_vector.next_to(text_lin_trans, DOWN, buff=1)
+
+        self.wait(7)
+
+        # Looking at this equation, we can think to ourselves, in an ideal world, what would
+        # be the slightest effect $D$ could have on a vector.
+        self.play(Write(question_eigen))
+
+        self.wait(8)
+        # Perhaps one of the least complicated effects it could have is simply multiplying a
+        # vector by a constant. Obviously, this can be true for every vector, so we are
+        # asking for the vectors that don't change direction after applying the operator
+        # $D$.
+        # This is the well-known eigenproblem,
+        self.play(
+            ReplacementTransform(
+                question_eigen,
+                eigen_problem_vector.get_part_by_tex(r"D \bm v = \lambda \bm v"),
+            )
+        )
+        self.show_lin_trans_and_eigen_vec()
+
+        # and the pairs of vectors and constants found
+        # are known as the eigenvectors and eigenvalues of the operator.
+        self.wait(4.5)
         self.play(
             Write(
                 eigen_problem_vector.get_part_by_tex(
@@ -177,45 +577,96 @@ class VectorScene(Scene):
                 )
             )
         )
-        self.wait(2)
+
+        self.wait(2.5)
+
+        # FIXME: Add labels to lambda and v saying eigenvalue and eigenvectors + wait (9 sec)
+
+        # Because we decided that $D$ is symmetric, the eigenvectors will be orthogonal, and
+        # the eigenvalues will be real values.
+
+        # FIXME: Add indicate of eigen vectors + wait (11 sec)
+
+        vec_in_phase_space.next_to(eigen_problem_vector, DOWN, buff=1)
+
+        # Now, we can express any vector using the eigenvectors as a basis. This can be done
+        # by projecting the vector using the inner product in each direction- Summing the
+        # contributions in each direction, we get our vector back.
         self.play(Write(vec_in_phase_space))
-        self.wait(2)
-        self.play(Indicate(vec_in_phase_space, color=ORANGE))
+
         self.wait(1)
+
+        # FIXME: Show projecting components - already exists + wait (8  sec)
+
+        self.play(Indicate(vec_in_phase_space, color=ORANGE))
+
+        # And why is this relevant?
+        self.wait(7)
+
+        # Let's see what happens when we use this on the equation.
+        # Moving \(D\) to right we must now consider its transpose.
+        # Using the fact that $D$ is symmetric, we now have $D v_i$. We know this the same
+        # as multiplying $v_i$ by its corresponding eigenvalue. And just like that, we don't
+        # have in our problem any $D$s. The problem has become a system of equations.
+        # So we can find the components of the unknown vector $\bm x$.
+
+        problem_vector_replaced_1_a.move_to(problem_vector.get_center())
         self.play(
-            # ReplacementTransform(problem_vector.get_part_by_tex(r"\bm x"), test),
-            TransformMatchingTex(problem_vector, problem_vector_replaced_1_a),
+            ReplacementTransform(problem_vector[0:2], problem_vector_replaced_1_a[2:4]),
+            ReplacementTransform(problem_vector[2], problem_vector_replaced_1_a[8]),
+            ReplacementTransform(problem_vector[3:], problem_vector_replaced_1_a[11]),
+            ReplacementTransform(
+                vec_in_phase_space[2:4].copy(), problem_vector_replaced_1_a[0:2]
+            ),
+            ReplacementTransform(
+                vec_in_phase_space[2:4].copy(), problem_vector_replaced_1_a[9:11]
+            ),
+            ReplacementTransform(
+                vec_in_phase_space[5:9].copy(), problem_vector_replaced_1_a[4:8]
+            ),
+            ReplacementTransform(
+                vec_in_phase_space[5:9].copy(), problem_vector_replaced_1_a[12:16]
+            ),
         )
-        self.wait(2)
-        self.remove(problem_vector_replaced_1_a)
-        self.add(problem_vector_replaced_1_b)
+
+        self.wait(1.5)
+
+        problem_vector_replaced_2_a.move_to(problem_vector_replaced_1_a.get_center())
+        substitution_pairs = [
+            ((0, 2), (0, 2)),
+            ((5, None), (5, None)),
+            ((2, 3), (4, 5)),
+            ((3, 4), (2, 3)),
+            ((4, 5), (3, 4)),
+        ]
         self.play(
-            TransformMatchingTex(
-                problem_vector_replaced_1_b,
-                problem_vector_replaced_2_a,
-                run_time=std_wait_time,
-            )
+            *[
+                ReplacementTransform(
+                    problem_vector_replaced_1_a[iin[0] : iin[1]],
+                    problem_vector_replaced_2_a[out[0] : out[1]],
+                )
+                for iin, out in substitution_pairs
+            ],
         )
-        self.wait(2)
-        self.remove(problem_vector_replaced_2_a)
-        self.add(problem_vector_replaced_2_b)
+
+        self.wait(4)
+
         self.play(
             Indicate(
                 text_lin_trans.get_part_by_tex(r"$(D=D^T)$"),
                 color=ORANGE,
             ),
         )
-        self.wait(2)
+        #
+        problem_vector_replaced_2_5_a.move_to(problem_vector_replaced_2_a.get_center())
         self.play(
-            TransformMatchingTex(
-                problem_vector_replaced_2_b,
+            ReplacementTransform(
+                problem_vector_replaced_2_a,
                 problem_vector_replaced_2_5_a,
-                run_time=std_wait_time,
             )
         )
-        self.wait(2)
-        self.remove(problem_vector_replaced_2_5_a)
-        self.add(problem_vector_replaced_2_5_b)
+
+        problem_vector_replaced_3_a.move_to(problem_vector_replaced_2_5_a.get_center())
         self.play(
             Indicate(
                 eigen_problem_vector.get_part_by_tex(r"D \bm v = \lambda \bm v"),
@@ -224,50 +675,79 @@ class VectorScene(Scene):
         )
         self.wait(1)
         self.play(
-            TransformMatchingTex(
-                problem_vector_replaced_2_5_b,
+            ReplacementTransform(
+                problem_vector_replaced_2_5_a,
                 problem_vector_replaced_3_a,
-                run_time=std_wait_time,
             )
         )
         self.wait(2)
-        self.remove(problem_vector_replaced_3_a)
-        self.add(problem_vector_replaced_3_b)
+
+        problem_vector_replaced_3_5_a.move_to(problem_vector_replaced_3_a.get_center())
+        substitution_pairs = [
+            ((0, 1), (0, 1)),
+            ((5, None), (5, None)),
+            ((4, 5), (1, 2)),
+            ((3, 4), (4, 5)),
+            ((2, 3), (3, 4)),
+            ((1, 2), (2, 3)),
+        ]
         self.play(
-            TransformMatchingTex(
-                problem_vector_replaced_3_b,
-                problem_vector_replaced_3_5_a,
-                run_time=std_wait_time,
-            )
+            *[
+                ReplacementTransform(
+                    problem_vector_replaced_3_a[iin[0] : iin[1]],
+                    problem_vector_replaced_3_5_a[out[0] : out[1]],
+                )
+                for iin, out in substitution_pairs
+            ],
+        )
+
+        self.wait(2)
+
+        problem_vector_replaced_4_a.move_to(problem_vector_replaced_3_5_a.get_center())
+        substitution_pairs = [
+            ((1, 7), (0, 6)),
+            ((10, 15), (7, 12)),
+            ((8, 9), (6, 7)),
+        ]
+        self.play(
+            *[
+                ReplacementTransform(
+                    problem_vector_replaced_3_5_a[iin[0] : iin[1]],
+                    problem_vector_replaced_4_a[out[0] : out[1]],
+                )
+                for iin, out in substitution_pairs
+            ],
+            *[
+                FadeOut(problem_vector_replaced_3_5_a[i], shift=DOWN)
+                for i in [0, 7, 9, 15]
+            ],
+            Write(problem_vector_replaced_4_a[12:]),
         )
         self.wait(2)
-        self.remove(problem_vector_replaced_3_5_a)
-        self.add(problem_vector_replaced_3_5_b)
+
+        problem_vector_replaced_5.move_to(problem_vector_replaced_4_a.get_center())
+        substitution_pairs = [
+            ((1, 12), (0, 11)),
+            ((0, 1), (11, 13)),
+            ((12, 13), (13, 14)),
+        ]
         self.play(
-            TransformMatchingTex(
-                problem_vector_replaced_3_5_b,
-                problem_vector_replaced_4_a,
-                run_time=std_wait_time,
-            )
-        )
-        self.wait(2)
-        self.remove(problem_vector_replaced_4_a)
-        self.add(problem_vector_replaced_4_b)
-        self.play(
-            TransformMatchingTex(
-                problem_vector_replaced_4_b,
-                problem_vector_replaced_5,
-                run_time=std_wait_time,
-            )
+            *[
+                ReplacementTransform(
+                    problem_vector_replaced_4_a[iin[0] : iin[1]],
+                    problem_vector_replaced_5[out[0] : out[1]],
+                )
+                for iin, out in substitution_pairs
+            ],
         )
         self.wait(2)
         self.play(
             Indicate(
-                problem_vector_replaced_5.get_part_by_tex(r"( \bm x, \bm v_i)"),
+                problem_vector_replaced_5[0:5],
                 color=ORANGE,
             ),
             Indicate(
-                vec_in_phase_space.get_part_by_tex(r"( \bm x, \bm v_i)"),
+                vec_in_phase_space[3:8],
                 color=ORANGE,
             ),
         )
@@ -278,22 +758,187 @@ class VectorScene(Scene):
                 Unwrite(mobject)
                 for mobject in [
                     problem_vector_replaced_5,
-                    vec_in_phase_space,
+                    # vec_in_phase_space,
                     text_lin_trans,
-                    title,
                     eigen_problem_vector,
                 ]
-            ]
+            ],
+            vec_in_phase_space.animate.shift(0.4 * DOWN),
         )
+        self.wait()
+
+        # What is the geometric meaning of this?
+
+        vec_in_original_coords = MathTex(
+            *r"\bm{x} = \sum_{i=1}^2 ( \bm{x} , \hat{\bm{e}}_i ) \hat{\bm{e}}_i".split(),
+            color=BLUE,
+        )
+        vec_in_original_coords.move_to(
+            vec_in_phase_space.get_center(), coor_mask=[0, 1, 0]
+        )
+        vec_in_original_coords.move_to(self.plane.get_center(), coor_mask=[1, 0, 0])
+
+        # Using our original description of the problem the vectors are describing using the
+        # two unit vectors e_1 and e_2.
+        self.play(Write(vec_in_original_coords))
+
+        # If we choose the the eigenvectors of the linear transformation as basis vectors,
+        # the linear transformation is much simpler being just a contraction or extension in
+        # perpendicular directions.
+
+        self.show_linear_transform_new_coords()
+
+        vector_b_trans = Arrow(
+            self.plane_new_coords.get_center(),
+            self.plane_new_coords.get_center() + np.append(self.b_trans, 0),
+            buff=0,
+            stroke_width=2,
+            max_tip_length_to_length_ratio=10,
+            max_stroke_width_to_length_ratio=20,
+            color=YELLOW,
+        )
+        vector_sol_trans = Arrow(
+            self.plane_new_coords.get_center(),
+            self.plane_new_coords.get_center() + np.append(self.sol_trans, 0),
+            buff=0,
+            stroke_width=2,
+            max_tip_length_to_length_ratio=10,
+            max_stroke_width_to_length_ratio=20,
+            color=BLUE,
+        )
+
+        self.play(GrowArrow(vector_b_trans))
+
+        easy_coords.next_to(vec_in_phase_space, UP, buff=0.5)
+        self.play(Write(easy_coords))
+        easy_coords.add_background_rectangle()
+        self.play(GrowArrow(vector_sol_trans))
+
+        self.wait()
+        self.play(
+            self.plane_new_coords.animate.apply_matrix(
+                self.diag_lin_trans, about_point=self.plane_new_coords.get_center()
+            ),
+            vector_sol_trans.animate.apply_matrix(
+                self.diag_lin_trans, about_point=self.plane_new_coords.get_center()
+            ),
+        )
+
+        self.wait()
+        self.play(
+            self.plane_new_coords.animate.apply_matrix(
+                np.linalg.inv(self.diag_lin_trans),
+                about_point=self.plane_new_coords.get_center(),
+            ),
+            vector_sol_trans.animate.apply_matrix(
+                np.linalg.inv(self.diag_lin_trans),
+                about_point=self.plane_new_coords.get_center(),
+            ),
+        )
+
+        self.wait()
+        self.play(
+            self.plane.animate.apply_matrix(
+                np.linalg.inv(self.lin_trans), about_point=self.plane.get_center()
+            )
+        )
+
+        theta = np.arccos(self.rot_mat[0, 0])
+
+        vector_b_orig = vector_b_trans.copy()
+        vector_sol_orig = vector_sol_trans.copy()
+
+        self.play(
+            vector_b_orig.animate.shift(
+                -(self.frame_text.get_center() - self.frame_lin_trans.get_center())
+            ),
+            vector_sol_orig.animate.shift(
+                -(self.frame_text.get_center() - self.frame_lin_trans.get_center())
+            ),
+        )
+        self.play(
+            Rotate(
+                vector_b_orig,
+                angle=theta,
+                about_point=self.frame_lin_trans.get_center(),
+            ),
+            Rotate(
+                vector_sol_orig,
+                angle=theta,
+                about_point=self.frame_lin_trans.get_center(),
+            ),
+        )
+
+        self.wait()
+
+        problem_vector_final.move_to(vec_in_original_coords, coor_mask=[1, 0, 0])
+        problem_vector_final.move_to(easy_coords, coor_mask=[0, 1, 0])
+        self.play(Write(problem_vector_final))
+        problem_vector_final.add_background_rectangle()
+
+        self.wait()
+
+        self.play(
+            self.plane.animate.apply_matrix(
+                self.lin_trans,
+                about_point=self.frame_lin_trans.get_center(),
+            ),
+            vector_sol_orig.animate.apply_matrix(
+                self.lin_trans,
+                about_point=self.frame_lin_trans.get_center(),
+            ),
+        )
+
         self.wait(5)
+
+
+class TestLatex(Scene):
+    def construct(self):
+
+        problem_vector = MathTex(r"{{D\bm x}} {{=}} {{\bm b}}", color=BLUE)
+        problem_vector_replaced_1_a = MathTex(
+            *r"\sum_i ( D \bm{x} , \bm{v}_i )\bm{v}_i=\sum_i(\bm{b},\bm{v}_i)\bm{v}_i".split(),
+            color=BLUE,
+        )
+        problem_vector_replaced_2_a = MathTex(
+            *r"\sum_i ( \bm{x} , D^T \bm{v}_i )\bm{v}_i=\sum_i(\bm{b},\bm{v}_i)\bm{v}_i".split(),
+            color=BLUE,
+        )
+        problem_vector_replaced_2_5_b = MathTex(
+            *r"\sum_i ( \bm{x} , D \bm{v}_i )\bm{v}_i=\sum_i(\bm{b},\bm{v}_i)\bm{v}_i".split(),
+            color=BLUE,
+        )
+
+        self.add(problem_vector_replaced_1_a)
+
+        self.wait(1)
+
+        self.play(
+            TransformMatchingTex(
+                problem_vector_replaced_1_a,
+                problem_vector_replaced_2_a,
+                key_map={"D": "D^T"},
+            ),
+        )
+        self.wait()
+
+        self.play(
+            TransformMatchingTex(
+                problem_vector_replaced_2_a,
+                problem_vector_replaced_2_5_b,
+                key_map={"D^T": "D"},
+            ),
+        )
 
 
 class Move(Scene):
     def __init__(self):
         config.pixel_height = 1080  #
         config.pixel_width = 1080  #
-        config.frame_height = 5
-        config.frame_width = 5
+        # config.frame_height = 5
+        # config.frame_width = 5
+        config.frame_height = 10
+        config.frame_width = 10
         Scene.__init__(self)
 
     def construct(self):
@@ -305,9 +950,9 @@ class Move(Scene):
         # tip_text = Text("(2, 2)").next_to(arrow.get_end(), RIGHT)
         # self.add(numberplane, dot, arrow, origin_text, tip_text)
 
-        lin_trans = np.array([[3, 0.3], [0.3, 4]]) / 1.8
+        lin_trans = np.array([[3, 0.3], [0.3, 4]]) / 2.5
         plane = NumberPlane(
-            x_range=[-5, 5, 0.25], y_range=[-4, 4, 0.25], x_length=10, y_length=10
+            x_range=[-5, 5, 0.5], y_range=[-4, 4, 0.5], x_length=5, y_length=5
         )
 
         eig_vals, eig_vecs = np.linalg.eig(lin_trans)
@@ -1740,27 +2385,37 @@ class Intro(Scene):
 
         self.wait(3)
         # This will be mainly focused on two questions.
-        # First, why does the Fourier transform turn differential equations into algebraic equations?
+        # First, why does the Fourier transform turn differential equations into algebraic
+        # equations?
         self.play(Write(text_2), Write(diff_eq), run_time=2)
         self.wait(8)
 
         self.wait(1)
-
+        # Here $D$ is differential operator and $f$ some unknown function depending on $t$.
         self.play(
             ReplacementTransform(diff_eq, diff_eq_2),
             run_time=2,
         )
+
+        # Applying the Fourier transform, we get an algebraic equation, where there is a new
+        # unknown function, the Fourier transform of $f$, $\mathcal F(f)$ function of $w$.
+        # But no differentiation operators are in sight!
         self.wait(1)
         self.play(ReplacementTransform(diff_eq_2, alg_eq), run_time=2)
-        self.wait(1)
         self.play(
             Indicate(alg_eq.get_parts_by_tex(r"[\mathcal F(f)](\omega)"), color=ORANGE)
         )
+
+        # We can now solve this algebraic equation and use the inverse Fourier transform to
+        # find our initial unknown function $f$.
         self.wait(1)
         self.play(ReplacementTransform(alg_eq, sol), run_time=2)
         self.wait(1)
         self.play(Indicate(sol.get_part_by_tex(r"f(t)"), color=ORANGE))
         self.wait(1)
+
+        # Second, and closely connected to the first, where does the kernel of the
+        # transformation, i.e., $e^{-iwt}$, come from? How can we interpret it?
         self.play(Write(text_3), run_time=2)
         self.wait(2)
 
@@ -2372,3 +3027,17 @@ def redraw_facing_camera(object, scene):
         return new_obj
 
     return redraw_func
+
+
+def create_own_replacement_transform(full_source, source_ind, replacement):
+    to_replace = full_source[source_ind]
+    to_the_left = full_source[:source_ind]
+    to_the_right = full_source[source_ind + 1 :]
+    replacement.move_to(to_replace.get_center())
+    full_group = VGroup(to_the_left, to_replace, to_the_right)
+    # full_group.arrange(RIGHT)
+    # to_replace.match_height(to_the_right)
+    transform = Transform(to_replace, replacement)
+    # rearrange = full_group.animate.arrange(RIGHT)
+
+    return transform  # , rearrange
